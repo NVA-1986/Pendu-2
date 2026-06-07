@@ -16,7 +16,7 @@ fi
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
-apt-get install -y git ca-certificates build-essential python3 make g++ nodejs
+apt-get install -y git ca-certificates build-essential python3 make g++ nodejs npm
 
 if ! id "$APP_USER" >/dev/null 2>&1; then
   useradd --system --no-create-home --home-dir /nonexistent --shell /usr/sbin/nologin "$APP_USER"
@@ -36,7 +36,7 @@ else
 fi
 
 if ! command -v npm >/dev/null 2>&1; then
-  echo "npm introuvable. Vérifie que le paquet Node.js installé fournit bien npm." >&2
+  echo "npm introuvable après installation. Vérifie la configuration APT de Node.js." >&2
   exit 1
 fi
 
