@@ -9,12 +9,8 @@
     <script>
       (function () {
         try {
-          var theme = localStorage.getItem('pendu-schwiiz-theme') || 'dark';
-          if (theme === 'dark') {
-            document.documentElement.classList.add('theme-dark');
-          } else {
-            document.documentElement.classList.remove('theme-dark');
-          }
+          document.documentElement.setAttribute('data-theme', 'dark');
+          document.documentElement.classList.add('theme-dark');
         } catch (e) {}
       })();
     </script>
@@ -26,14 +22,15 @@
   <body>
     <main class="app-shell">
       <header class="app-header">
-        <button id="theme-btn" class="theme-toggle" type="button" aria-label="Basculer le mode clair/foncé" aria-pressed="true" title="Passer en mode clair">
+        <button id="theme-btn" class="theme-toggle" type="button" aria-label="Passer en mode clair" aria-pressed="true" title="Passer en mode clair">
           <svg class="theme-toggle__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <defs>
-              <clipPath id="halfClip"><rect x="0" y="0" width="12" height="24" /></clipPath>
+              <clipPath id="themeHalfClip"><rect x="0" y="0" width="12" height="24" /></clipPath>
             </defs>
-            <circle cx="12" cy="12" r="9.5" fill="currentColor" stroke="currentColor" stroke-width="1.5" />
-            <circle cx="12" cy="12" r="9.5" fill="#f8fafc" clip-path="url(#halfClip)" />
-            <circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="1.5" />
+            <circle cx="12" cy="12" r="8.5" fill="#f8fafc" />
+            <circle cx="12" cy="12" r="8.5" fill="#111827" clip-path="url(#themeHalfClip)" />
+            <circle cx="12" cy="12" r="8.5" fill="none" stroke="#111827" stroke-width="1.2" />
+            <path d="M12 1.8v2.2M12 20v2.2M1.8 12H4M20 12h2.2M4.3 4.3l1.5 1.5M18.2 18.2l1.5 1.5M19.7 4.3l-1.5 1.5M5.8 18.2l-1.5 1.5" stroke="#d1d5db" stroke-width="1.2" stroke-linecap="round" />
           </svg>
         </button>
         <h1>Jeu de pendu en Suisse-allemand</h1>
@@ -95,10 +92,8 @@
       </section>
 
       <footer class="app-footer">
-        <div id="app-version" class="app-version">v1.0.3</div>
-        <div class="app-credit">
-          Créé via AI par <a href="mailto:info@418.ch">Nicolas</a>
-        </div>
+        <div id="app-version" class="app-version">v1.0.4</div>
+        <div class="app-credit">Créé via AI par <a href="mailto:info@418.ch">Nicolas</a></div>
       </footer>
     </main>
 

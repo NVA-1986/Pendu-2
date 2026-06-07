@@ -17,6 +17,8 @@
   --shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
 }
 
+html[data-theme="dark"],
+body[data-theme="dark"],
 html.theme-dark,
 body.theme-dark {
   --bg: #0f1720;
@@ -112,6 +114,8 @@ button {
   border: 1px solid #96c7a8;
 }
 
+html[data-theme="dark"] .action-btn--ghost,
+body[data-theme="dark"] .action-btn--ghost,
 html.theme-dark .action-btn--ghost,
 body.theme-dark .action-btn--ghost {
   background: #1f2e24;
@@ -143,12 +147,16 @@ body.theme-dark .action-btn--ghost {
   display: block;
 }
 
+html[data-theme="dark"] .theme-toggle,
+body[data-theme="dark"] .theme-toggle,
 html.theme-dark .theme-toggle,
 body.theme-dark .theme-toggle {
   background: linear-gradient(90deg, #f8fafc 0 50%, #111827 50% 100%);
   color: #f8fafc;
 }
 
+html[data-theme="dark"] .theme-toggle__icon,
+body[data-theme="dark"] .theme-toggle__icon,
 html.theme-dark .theme-toggle__icon,
 body.theme-dark .theme-toggle__icon {
   color: #f8fafc;
@@ -324,11 +332,13 @@ body.theme-dark .theme-toggle__icon {
   font-size: 0.92rem;
   color: var(--muted);
   flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .app-credit {
   text-align: right;
   margin-left: auto;
+  flex: 0 0 auto;
 }
 
 .app-footer > :first-child {
