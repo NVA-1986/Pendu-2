@@ -369,7 +369,7 @@ async function init() {
   renderKeyboard(els.keyboard, handleGuess);
   renderDirectionLabel();
   applyTheme(state.theme);
-  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '1.0.8'}`;
+  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '1.0.10'}`;
   registerPhysicalKeyboard();
   registerBeforeUnload();
   registerPwa();
