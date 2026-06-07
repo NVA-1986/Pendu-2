@@ -61,8 +61,8 @@ WorkingDirectory=$APP_DIR
 Environment=NODE_ENV=production
 Environment=PORT=$PORT
 Environment=HOST=$HOST
-Environment=MATOMO_URL=${MATOMO_URL:-}
-Environment=MATOMO_SITE_ID=${MATOMO_SITE_ID:-}
+Environment=MATOMO_URL=//matomo.oblivium.ch/
+Environment=MATOMO_SITE_ID=1
 ExecStart=$NPM_BIN start
 Restart=always
 RestartSec=5

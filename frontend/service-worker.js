@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pendu-schwiiz-v13';
+const CACHE_NAME = 'pendu-schwiiz-v14';
 const APP_SHELL = [
   '/',
   '/index.html',

@@ -27,8 +27,8 @@ app.get('/config.js', (_req, res) => {
   res.send(
     `window.APP_CONFIG = ${JSON.stringify({
       version: appVersion,
-      matomoUrl: process.env.MATOMO_URL || '//10.0.10.201/',
-      matomoSiteId: process.env.MATOMO_SITE_ID || '1'
+      matomoUrl: '//matomo.oblivium.ch/',
+      matomoSiteId: '1'
     })};`
   );
 });
