@@ -24,8 +24,11 @@ fi
 
 mkdir -p "$(dirname "$APP_DIR")"
 
+git config --global --add safe.directory "$APP_DIR" >/dev/null 2>&1 || true
+
 if [[ ! -d "$APP_DIR/.git" ]]; then
   git clone -b "$BRANCH" "$REPO_URL" "$APP_DIR"
+  git config --global --add safe.directory "$APP_DIR" >/dev/null 2>&1 || true
 else
   cd "$APP_DIR"
   git fetch origin "$BRANCH"

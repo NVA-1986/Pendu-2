@@ -15,6 +15,8 @@ if [[ ! -d "$APP_DIR/.git" ]]; then
   exit 1
 fi
 
+git config --global --add safe.directory "$APP_DIR" >/dev/null 2>&1 || true
+
 cd "$APP_DIR"
 git fetch origin "$BRANCH"
 git reset --hard "origin/$BRANCH"
