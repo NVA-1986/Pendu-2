@@ -107,15 +107,44 @@ function renderDirectionLabel() {
 
 function applyTheme(theme) {
   state.theme = theme;
-  document.body.classList.toggle('theme-dark', theme === 'dark');
+  const isDark = theme === 'dark';
+
+  document.body.classList.toggle('theme-dark', isDark);
   document.body.dataset.theme = theme;
   document.body.style.colorScheme = theme;
-  document.documentElement.classList.toggle('theme-dark', theme === 'dark');
+  document.documentElement.classList.toggle('theme-dark', isDark);
   document.documentElement.dataset.theme = theme;
   document.documentElement.style.colorScheme = theme;
-  els.themeBtn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
-  els.themeBtn.title = theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode foncé';
-  els.themeBtn.setAttribute('aria-label', theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode foncé');
+
+  document.querySelectorAll('.key').forEach((key) => {
+    key.style.backgroundColor = isDark ? '#b5b5b5' : '#ffffff';
+    key.style.color = isDark ? '#000000' : '#111111';
+    key.style.borderColor = isDark ? '#8c8c8c' : '#d1d5db';
+  });
+
+  const hangmanNodes = document.querySelectorAll('#hangman-svg path, #hangman-svg circle');
+  hangmanNodes.forEach((node) => {
+    node.style.stroke = isDark ? '#ffffff' : '#111827';
+  });
+
+  const title = document.querySelector('.app-header h1');
+  const hint = document.getElementById('hint-text');
+  const version = document.getElementById('app-version');
+  if (title) title.style.color = isDark ? '#ffffff' : 'var(--title-color)';
+  if (hint) hint.style.color = isDark ? '#ffffff' : 'var(--hint-color)';
+  if (version) version.style.color = isDark ? '#ffffff' : 'var(--version-color)';
+
+  els.themeBtn.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+  els.themeBtn.title = isDark ? 'Passer en mode clair' : 'Passer en mode foncé';
+  els.themeBtn.setAttribute('aria-label', isDark ? 'Passer en mode clair' : 'Passer en mode foncé');
+  els.themeBtn.style.width = '24px';
+  els.themeBtn.style.height = '24px';
+  const icon = els.themeBtn.querySelector('.theme-toggle__icon');
+  if (icon) {
+    icon.style.width = '12px';
+    icon.style.height = '12px';
+  }
+
   saveTheme(theme);
 }
 
