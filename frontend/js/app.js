@@ -8,7 +8,6 @@ import {
 } from './keyboard.js';
 import { setHangmanErrors, resetHangman } from './hangman.js';
 import { queueAndSyncStat, startStatsSync } from './stats-sync.js';
-import { setupMatomo } from './matomo.js';
 
 const MAX_ERRORS = 7;
 const PLAYER_ID_KEY = 'pendu-schwiiz-player-id';
@@ -369,12 +368,11 @@ async function init() {
   renderKeyboard(els.keyboard, handleGuess);
   renderDirectionLabel();
   applyTheme(state.theme);
-  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '1.0.10'}`;
+  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '1.0.11'}`;
   registerPhysicalKeyboard();
   registerBeforeUnload();
   registerPwa();
   startStatsSync();
-  setupMatomo();
 
   els.newGameBtn.addEventListener('click', () => {
     startNewGame().catch(() => {});
