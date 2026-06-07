@@ -125,7 +125,9 @@ function renderHintMeta() {
 }
 
 function renderHint() {
-  els.hintText.textContent = getPromptHint() || '—';
+  const prompt = getPromptHint() || '—';
+  const hint = state.currentWord?.secondary_hint ? state.currentWord.secondary_hint.toUpperCase() : '';
+  els.hintText.textContent = hint ? `[(${hint}) - ${prompt}]` : prompt;
   renderHintMeta();
 }
 
@@ -336,7 +338,7 @@ async function init() {
   renderKeyboard(els.keyboard, handleGuess);
   renderDirectionLabel();
   applyTheme(state.theme);
-  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '1.0.4'}`;
+  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '1.0.5'}`;
   registerPhysicalKeyboard();
   registerBeforeUnload();
   registerPwa();
