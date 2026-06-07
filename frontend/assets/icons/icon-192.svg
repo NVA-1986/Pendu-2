@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-label="Pendu Schwiiz">
+  <rect width="192" height="192" rx="36" fill="#D32F2F"/>
+  <g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="10">
+    <path d="M40 154h112"/>
+    <path d="M68 154V38h60"/>
+    <path d="M128 38v18"/>
+    <circle cx="128" cy="78" r="16"/>
+    <path d="M128 94v30"/>
+    <path d="M128 106l-16 16"/>
+    <path d="M128 106l16 16"/>
+    <path d="M128 124l-14 26"/>
+    <path d="M128 124l14 26"/>
+  </g>
+  <path d="M52 170c22-10 46-10 68 0" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+</svg>
