@@ -139,10 +139,10 @@ body.theme-dark .action-btn--ghost {
 
 .theme-toggle {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 34px;
-  height: 34px;
+  top: 14px;
+  right: 14px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: 1px solid var(--border);
   background: linear-gradient(90deg, #111827 0 50%, #f8fafc 50% 100%);
@@ -156,8 +156,8 @@ body.theme-dark .action-btn--ghost {
 }
 
 .theme-toggle__icon {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   display: block;
 }
 
@@ -218,6 +218,21 @@ body.theme-dark .theme-toggle__icon {
   width: 100%;
   max-width: 360px;
   height: auto;
+}
+
+html[data-theme="dark"] #hangman-svg path,
+html[data-theme="dark"] #hangman-svg circle,
+body[data-theme="dark"] #hangman-svg path,
+body[data-theme="dark"] #hangman-svg circle,
+html.theme-dark #hangman-svg path,
+html.theme-dark #hangman-svg circle,
+body.theme-dark #hangman-svg path,
+body.theme-dark #hangman-svg circle {
+  stroke: #ffffff;
+  stroke-width: 5;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 #hangman-svg path,
@@ -315,6 +330,15 @@ body.theme-dark .theme-toggle__icon {
   padding: 0;
   cursor: pointer;
   transition: transform 120ms ease, background-color 120ms ease, color 120ms ease, border-color 120ms ease, opacity 120ms ease;
+}
+
+html[data-theme="dark"] .key,
+body[data-theme="dark"] .key,
+html.theme-dark .key,
+body.theme-dark .key {
+  background: #b5b5b5;
+  color: #000000;
+  border-color: #8c8c8c;
 }
 
 .key:active {
