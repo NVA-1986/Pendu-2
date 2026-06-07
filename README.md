@@ -9,7 +9,7 @@ npm install
 npm start
 ```
 
-Puis ouvrir `http://localhost:3000`.
+Puis ouvrir `http://localhost:4173`.
 
 ## Structure des mots
 
@@ -24,3 +24,11 @@ Le fichier source est `backend/data/words.json` avec les champs :
 - `length`
 
 Le code frontend/backend supporte cette structure et affiche aussi les métadonnées utiles (`hint`, `length`).
+
+## Déploiement LXC
+
+Deux scripts sont fournis dans `scripts/` :
+- `install.sh` : installe le jeu et crée le service systemd,
+- `update.sh` : met à jour depuis GitHub puis redémarre le service.
+
+Le service écoute sur le port `4173`. 

@@ -7,7 +7,7 @@ const statsRouter = require('./routes/stats');
 initDatabase();
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 4173;
 const frontendDir = path.join(__dirname, '..', 'frontend');
 const dataDir = path.join(__dirname, 'data');
 
@@ -32,6 +32,8 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'internal_error' });
 });
 
-app.listen(port, () => {
-  console.log(`Pendu Schwiiz running on http://localhost:${port}`);
+const host = process.env.HOST || '0.0.0.0';
+
+app.listen(port, host, () => {
+  console.log(`Pendu Schwiiz running on http://${host}:${port}`);
 });
