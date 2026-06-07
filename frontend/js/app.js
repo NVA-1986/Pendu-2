@@ -111,8 +111,9 @@ function applyTheme(theme) {
   state.theme = theme;
   document.body.classList.toggle('theme-dark', theme === 'dark');
   document.documentElement.classList.toggle('theme-dark', theme === 'dark');
-  els.themeBtn.textContent = theme === 'dark' ? 'Mode clair' : 'Mode foncé';
   els.themeBtn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+  els.themeBtn.title = theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode foncé';
+  els.themeBtn.setAttribute('aria-label', theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode foncé');
   saveTheme(theme);
 }
 

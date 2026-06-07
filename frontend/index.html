@@ -25,13 +25,15 @@
   <body>
     <main class="app-shell">
       <header class="app-header">
+        <button id="theme-btn" class="theme-toggle" type="button" aria-label="Basculer le mode clair/foncé" aria-pressed="false" title="Mode clair/foncé">
+          <span class="theme-toggle__icon" aria-hidden="true"></span>
+        </button>
         <h1>Jeu de pendu en Suisse-allemand</h1>
       </header>
 
       <section class="controls" aria-label="Actions de jeu">
         <button id="new-game-btn" class="action-btn" type="button">Nouvelle partie</button>
         <button id="direction-btn" class="action-btn action-btn--ghost" type="button">FR → DE-CH</button>
-        <button id="theme-btn" class="action-btn action-btn--ghost" type="button" aria-pressed="false">Mode foncé</button>
       </section>
 
       <section class="hint-card" aria-live="polite">
@@ -85,10 +87,10 @@
       </section>
 
       <footer class="app-footer">
+        <div id="app-version" class="app-version">v1.0.2</div>
         <div>
           Créé via AI par <a href="mailto:info@418.ch">Nicolas</a>
         </div>
-        <div id="app-version" class="app-version">v1.0.1</div>
       </footer>
     </main>
 
