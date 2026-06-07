@@ -44,6 +44,7 @@ body.theme-dark {
   --title-color: #ffffff;
   --hint-color: #ffffff;
   --version-color: #ffffff;
+  --hangman-stroke: #ffffff;
 }
 
 html,
@@ -138,10 +139,10 @@ body.theme-dark .action-btn--ghost {
 
 .theme-toggle {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 44px;
-  height: 44px;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   border: 1px solid var(--border);
   background: linear-gradient(90deg, #111827 0 50%, #f8fafc 50% 100%);
@@ -155,8 +156,8 @@ body.theme-dark .action-btn--ghost {
 }
 
 .theme-toggle__icon {
-  width: 28px;
-  height: 28px;
+  width: 20px;
+  height: 20px;
   display: block;
 }
 
@@ -221,7 +222,7 @@ body.theme-dark .theme-toggle__icon {
 
 #hangman-svg path,
 #hangman-svg circle {
-  stroke: #111827;
+  stroke: var(--hangman-stroke);
   stroke-width: 5;
   fill: none;
   stroke-linecap: round;
@@ -229,7 +230,7 @@ body.theme-dark .theme-toggle__icon {
 }
 
 .hangman-base path {
-  stroke: #111827;
+  stroke: var(--hangman-stroke);
 }
 
 .hangman-part {
