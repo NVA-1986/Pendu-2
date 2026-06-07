@@ -109,8 +109,10 @@ function applyTheme(theme) {
   state.theme = theme;
   document.body.classList.toggle('theme-dark', theme === 'dark');
   document.body.dataset.theme = theme;
+  document.body.style.colorScheme = theme;
   document.documentElement.classList.toggle('theme-dark', theme === 'dark');
   document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme;
   els.themeBtn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
   els.themeBtn.title = theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode foncé';
   els.themeBtn.setAttribute('aria-label', theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode foncé');
@@ -338,7 +340,7 @@ async function init() {
   renderKeyboard(els.keyboard, handleGuess);
   renderDirectionLabel();
   applyTheme(state.theme);
-  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '1.0.7'}`;
+  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '1.0.8'}`;
   registerPhysicalKeyboard();
   registerBeforeUnload();
   registerPwa();
