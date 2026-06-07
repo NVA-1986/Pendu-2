@@ -8,6 +8,7 @@ import {
 } from './keyboard.js';
 import { setHangmanErrors, resetHangman } from './hangman.js';
 import { queueAndSyncStat, startStatsSync } from './stats-sync.js';
+import { setupMatomo } from './matomo.js';
 
 const MAX_ERRORS = 7;
 const PLAYER_ID_KEY = 'pendu-schwiiz-player-id';
@@ -21,7 +22,9 @@ const els = {
   hintMeta: document.getElementById('hint-meta'),
   wordDisplay: document.getElementById('word-display'),
   statusText: document.getElementById('status-text'),
-  keyboard: document.getElementById('keyboard')
+  keyboard: document.getElementById('keyboard'),
+  themeBtn: document.getElementById('theme-btn'),
+  appVersion: document.getElementById('app-version')
 };
 
 const state = {
@@ -35,15 +38,26 @@ const state = {
   errors: 0,
   guessedLetters: new Set(),
   lettersTried: [],
-  loading: false
+  loading: false,
+  theme: getSavedTheme()
 };
 
 function getSavedDirection() {
   return localStorage.getItem(DIRECTION_KEY) === 'DE_TO_FR' ? 'DE_TO_FR' : 'FR_TO_DE';
 }
 
+function getSavedTheme() {
+  const saved = localStorage.getItem('pendu-schwiiz-theme');
+  if (saved === 'dark' || saved === 'light') return saved;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
 function saveDirection(direction) {
   localStorage.setItem(DIRECTION_KEY, direction);
+}
+
+function saveTheme(theme) {
+  localStorage.setItem('pendu-schwiiz-theme', theme);
 }
 
 function getOrCreatePlayerId() {
@@ -93,6 +107,15 @@ function renderDirectionLabel() {
   els.directionBtn.textContent = state.direction === 'FR_TO_DE' ? 'FR → DE-CH' : 'DE-CH → FR';
 }
 
+function applyTheme(theme) {
+  state.theme = theme;
+  document.body.classList.toggle('theme-dark', theme === 'dark');
+  document.documentElement.classList.toggle('theme-dark', theme === 'dark');
+  els.themeBtn.textContent = theme === 'dark' ? 'Mode clair' : 'Mode foncé';
+  els.themeBtn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+  saveTheme(theme);
+}
+
 function renderHintMeta() {
   const meta = [];
   if (getLengthHint()) meta.push(`Longueur : ${getLengthHint()}`);
@@ -131,7 +154,7 @@ function renderWordDisplay() {
   els.wordDisplay.classList.toggle('is-lost', state.completed && state.result === 'lost');
 }
 
-function updateStatus(message) {
+function updateStatus(message = '') {
   els.statusText.textContent = message;
 }
 
@@ -153,7 +176,7 @@ function resetRoundUi() {
   els.wordDisplay.innerHTML = '';
   els.hintText.textContent = 'Chargement...';
   els.hintMeta.textContent = '';
-  updateStatus('Nouvelle partie en cours…');
+  updateStatus('');
 }
 
 async function loadNewWord() {
@@ -167,7 +190,7 @@ async function loadNewWord() {
     state.loading = false;
     renderHint();
     renderWordDisplay();
-    updateStatus('À vous de jouer.');
+    updateStatus('');
   } catch (error) {
     state.loading = false;
     updateStatus(`Impossible de charger un mot : ${error.message}`);
@@ -311,10 +334,13 @@ function registerPwa() {
 async function init() {
   renderKeyboard(els.keyboard, handleGuess);
   renderDirectionLabel();
+  applyTheme(state.theme);
+  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '1.0.1'}`;
   registerPhysicalKeyboard();
   registerBeforeUnload();
   registerPwa();
   startStatsSync();
+  setupMatomo();
 
   els.newGameBtn.addEventListener('click', () => {
     startNewGame().catch(() => {});
@@ -322,6 +348,10 @@ async function init() {
 
   els.directionBtn.addEventListener('click', () => {
     toggleDirection().catch(() => {});
+  });
+
+  els.themeBtn.addEventListener('click', () => {
+    applyTheme(state.theme === 'dark' ? 'light' : 'dark');
   });
 
   await restorePendingAbandonment();

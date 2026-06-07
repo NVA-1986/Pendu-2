@@ -58,6 +58,8 @@ WorkingDirectory=$APP_DIR
 Environment=NODE_ENV=production
 Environment=PORT=$PORT
 Environment=HOST=$HOST
+Environment=MATOMO_URL=${MATOMO_URL:-}
+Environment=MATOMO_SITE_ID=${MATOMO_SITE_ID:-}
 ExecStart=$NPM_BIN start
 Restart=always
 RestartSec=5

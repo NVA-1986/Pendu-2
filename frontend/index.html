@@ -6,20 +6,32 @@
     <meta name="theme-color" content="#D32F2F" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <title>Pendu Schwiiz</title>
+    <script>
+      (function () {
+        try {
+          var theme = localStorage.getItem('pendu-schwiiz-theme');
+          if (!theme) {
+            theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          if (theme === 'dark') document.documentElement.classList.add('theme-dark');
+        } catch (e) {}
+      })();
+    </script>
+    <title>Jeu de pendu en Suisse-allemand</title>
     <link rel="manifest" href="/manifest.json" />
     <link rel="stylesheet" href="/css/style.css" />
+    <script src="/config.js"></script>
   </head>
   <body>
     <main class="app-shell">
       <header class="app-header">
-        <h1>Pendu Schwiiz</h1>
-        <p class="subtitle">Jeu de pendu mobile-first en suisse-allemand</p>
+        <h1>Jeu de pendu en Suisse-allemand</h1>
       </header>
 
       <section class="controls" aria-label="Actions de jeu">
         <button id="new-game-btn" class="action-btn" type="button">Nouvelle partie</button>
         <button id="direction-btn" class="action-btn action-btn--ghost" type="button">FR → DE-CH</button>
+        <button id="theme-btn" class="action-btn action-btn--ghost" type="button" aria-pressed="false">Mode foncé</button>
       </section>
 
       <section class="hint-card" aria-live="polite">
@@ -65,12 +77,19 @@
       </section>
 
       <section class="status-card" aria-live="polite">
-        <div id="status-text" class="status-text">Nouvelle partie prête.</div>
+        <div id="status-text" class="status-text"></div>
       </section>
 
       <section class="keyboard-card" aria-label="Clavier virtuel">
         <div id="keyboard" class="keyboard"></div>
       </section>
+
+      <footer class="app-footer">
+        <div>
+          Créé via AI par <a href="mailto:info@418.ch">Nicolas</a>
+        </div>
+        <div id="app-version" class="app-version">v1.0.1</div>
+      </footer>
     </main>
 
     <script type="module" src="/js/app.js"></script>

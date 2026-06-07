@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const packageJson = require('../package.json');
 const { initDatabase } = require('./db/database');
 const wordsRouter = require('./routes/words');
 const statsRouter = require('./routes/stats');
@@ -8,14 +9,28 @@ initDatabase();
 
 const app = express();
 const port = process.env.PORT || 4173;
+const host = process.env.HOST || '0.0.0.0';
 const frontendDir = path.join(__dirname, '..', 'frontend');
 const dataDir = path.join(__dirname, 'data');
+const appVersion = packageJson.version || '1.0.0';
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: false }));
 
 app.get('/health', (_req, res) => {
   res.json({ ok: true });
+});
+
+app.get('/config.js', (_req, res) => {
+  res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
+  res.send(
+    `window.APP_CONFIG = ${JSON.stringify({
+      version: appVersion,
+      matomoUrl: process.env.MATOMO_URL || '',
+      matomoSiteId: process.env.MATOMO_SITE_ID || ''
+    })};`
+  );
 });
 
 app.use('/data', express.static(dataDir, { maxAge: '1h' }));
@@ -31,8 +46,6 @@ app.use((err, _req, res, _next) => {
   console.error(err);
   res.status(500).json({ error: 'internal_error' });
 });
-
-const host = process.env.HOST || '0.0.0.0';
 
 app.listen(port, host, () => {
   console.log(`Pendu Schwiiz running on http://${host}:${port}`);

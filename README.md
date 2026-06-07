@@ -31,4 +31,11 @@ Deux scripts sont fournis dans `scripts/` :
 - `install.sh` : installe le jeu et crée le service systemd,
 - `update.sh` : met à jour depuis GitHub puis redémarre le service.
 
-Le service écoute sur le port `4173`. 
+Le service écoute sur le port `4173`.
+
+## Matomo
+
+Configurer les variables d’environnement suivantes sur le service systemd si besoin :
+- `MATOMO_URL`
+- `MATOMO_SITE_ID`
+

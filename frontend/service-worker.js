@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pendu-schwiiz-v1';
+const CACHE_NAME = 'pendu-schwiiz-v2';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -9,6 +9,8 @@ const APP_SHELL = [
   '/js/keyboard.js',
   '/js/hangman.js',
   '/js/stats-sync.js',
+  '/js/matomo.js',
+  '/config.js',
   '/data/words.json',
   '/assets/icons/icon-192.svg',
   '/assets/icons/icon-512.svg'
@@ -66,6 +68,11 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
 
   if (url.pathname.startsWith('/api/stats')) {
+    return;
+  }
+
+  if (url.pathname === '/config.js') {
+    event.respondWith(networkFirst(request));
     return;
   }
 
