@@ -9,11 +9,12 @@
     <script>
       (function () {
         try {
-          var theme = localStorage.getItem('pendu-schwiiz-theme');
-          if (!theme) {
-            theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          var theme = localStorage.getItem('pendu-schwiiz-theme') || 'dark';
+          if (theme === 'dark') {
+            document.documentElement.classList.add('theme-dark');
+          } else {
+            document.documentElement.classList.remove('theme-dark');
           }
-          if (theme === 'dark') document.documentElement.classList.add('theme-dark');
         } catch (e) {}
       })();
     </script>
@@ -25,8 +26,15 @@
   <body>
     <main class="app-shell">
       <header class="app-header">
-        <button id="theme-btn" class="theme-toggle" type="button" aria-label="Basculer le mode clair/foncé" aria-pressed="false" title="Mode clair/foncé">
-          <span class="theme-toggle__icon" aria-hidden="true"></span>
+        <button id="theme-btn" class="theme-toggle" type="button" aria-label="Basculer le mode clair/foncé" aria-pressed="true" title="Passer en mode clair">
+          <svg class="theme-toggle__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <defs>
+              <clipPath id="halfClip"><rect x="0" y="0" width="12" height="24" /></clipPath>
+            </defs>
+            <circle cx="12" cy="12" r="9.5" fill="currentColor" stroke="currentColor" stroke-width="1.5" />
+            <circle cx="12" cy="12" r="9.5" fill="#f8fafc" clip-path="url(#halfClip)" />
+            <circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="1.5" />
+          </svg>
         </button>
         <h1>Jeu de pendu en Suisse-allemand</h1>
       </header>
@@ -87,8 +95,8 @@
       </section>
 
       <footer class="app-footer">
-        <div id="app-version" class="app-version">v1.0.2</div>
-        <div>
+        <div id="app-version" class="app-version">v1.0.3</div>
+        <div class="app-credit">
           Créé via AI par <a href="mailto:info@418.ch">Nicolas</a>
         </div>
       </footer>

@@ -1,26 +1,20 @@
-function normalizeBaseUrl(url) {
-  if (!url) return '';
-  return url.endsWith('/') ? url : `${url}/`;
-}
-
 function setupMatomo() {
   const config = window.APP_CONFIG || {};
-  const baseUrl = normalizeBaseUrl(config.matomoUrl);
-  const siteId = config.matomoSiteId;
+  const u = config.matomoUrl || '//10.0.10.201/';
+  const siteId = config.matomoSiteId || '1';
 
-  if (!baseUrl || !siteId) return;
-
-  window._paq = window._paq || [];
-  window._paq.push(['setTrackerUrl', `${baseUrl}matomo.php`]);
-  window._paq.push(['setSiteId', siteId]);
-  window._paq.push(['enableLinkTracking']);
-  window._paq.push(['trackPageView']);
-  window._paq.push(['enableHeartBeatTimer', 15]);
-
-  const script = document.createElement('script');
-  script.async = true;
-  script.src = `${baseUrl}matomo.js`;
-  document.head.appendChild(script);
+  var _paq = (window._paq = window._paq || []);
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var base = u.endsWith('/') ? u : `${u}/`;
+    _paq.push(['setTrackerUrl', base + 'matomo.php']);
+    _paq.push(['setSiteId', siteId]);
+    var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
+    g.async = true;
+    g.src = base + 'matomo.js';
+    s.parentNode.insertBefore(g, s);
+  })();
 }
 
 export { setupMatomo };
