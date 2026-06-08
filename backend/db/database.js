@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const Database = require('better-sqlite3');
 
 const dbPath = path.join(__dirname, 'hangman.db');
@@ -7,6 +8,7 @@ const wordsPath = path.join(__dirname, '..', 'data', 'words.json');
 
 let db;
 let wordsCache = null;
+let wordsCacheMtimeMs = 0;
 
 function initDatabase() {
   if (db) return db;
@@ -61,16 +63,109 @@ function getDb() {
   return initDatabase();
 }
 
-function loadWords() {
-  if (wordsCache) return wordsCache;
-
-  const raw = fs.readFileSync(wordsPath, 'utf8');
+function safeParseWords(raw) {
   const parsed = JSON.parse(raw);
   if (!Array.isArray(parsed)) {
     throw new Error('words.json must contain an array');
   }
-  wordsCache = parsed;
+  return parsed.map(normalizeWordRecord);
+}
+
+function normalizeWordRecord(word) {
+  const id = String(word?.id || '').trim();
+  const baseWord = String(word?.word || '').trim();
+  const translation = String(word?.translation || '').trim();
+  const deutch = String(word?.deutch || '').trim();
+  const category = String(word?.category || '').trim();
+  const dialect = String(word?.dialect || '').trim();
+  const hint = String(word?.hint || '').trim();
+  const length = Number.isInteger(word?.length) && word.length > 0 ? word.length : [...baseWord].length;
+
+  if (!id) {
+    throw new Error('word.id is required');
+  }
+  if (!baseWord) {
+    throw new Error(`word.word is required for ${id}`);
+  }
+
+  return {
+    id,
+    word: baseWord,
+    translation,
+    deutch,
+    category,
+    dialect,
+    hint,
+    length
+  };
+}
+
+function loadWords(forceRefresh = false) {
+  const stat = fs.statSync(wordsPath);
+  if (!forceRefresh && wordsCache && wordsCacheMtimeMs === stat.mtimeMs) {
+    return wordsCache;
+  }
+
+  const raw = fs.readFileSync(wordsPath, 'utf8');
+  wordsCache = safeParseWords(raw);
+  wordsCacheMtimeMs = stat.mtimeMs;
   return wordsCache;
+}
+
+function writeWords(words) {
+  const normalized = words.map(normalizeWordRecord);
+  const tempPath = `${wordsPath}.tmp`;
+  fs.writeFileSync(tempPath, `${JSON.stringify(normalized, null, 2)}\n`, 'utf8');
+  fs.renameSync(tempPath, wordsPath);
+  wordsCache = normalized;
+  wordsCacheMtimeMs = fs.statSync(wordsPath).mtimeMs;
+  return normalized;
+}
+
+function listWords() {
+  return loadWords(true);
+}
+
+function getWordById(wordId) {
+  return loadWords(true).find((word) => word.id === wordId) || null;
+}
+
+function upsertWord(input) {
+  const words = loadWords(true);
+  const normalized = normalizeWordRecord({
+    id: input.id || generateWordId(),
+    word: input.word,
+    translation: input.translation || '',
+    deutch: input.deutch || '',
+    category: input.category || '',
+    dialect: input.dialect || '',
+    hint: input.hint || '',
+    length: Number.isInteger(input.length) ? input.length : undefined
+  });
+
+  const index = words.findIndex((word) => word.id === normalized.id);
+  if (index >= 0) {
+    words[index] = normalized;
+  } else {
+    words.push(normalized);
+  }
+
+  writeWords(words);
+  return normalized;
+}
+
+function deleteWord(wordId) {
+  const words = loadWords(true);
+  const next = words.filter((word) => word.id !== wordId);
+  if (next.length === words.length) {
+    return false;
+  }
+  writeWords(next);
+  return true;
+}
+
+function generateWordId() {
+  return `word_${crypto.randomUUID().slice(0, 8)}`;
 }
 
 function getRandomWordRecord() {
@@ -206,14 +301,100 @@ function recordGameSession(session) {
   return insertTransaction(session);
 }
 
+function getStatsSummary() {
+  const database = getDb();
+  const sessions = database.prepare(`
+    SELECT
+      COUNT(*) AS sessions,
+      SUM(CASE WHEN result = 'won' THEN 1 ELSE 0 END) AS won,
+      SUM(CASE WHEN result = 'lost' THEN 1 ELSE 0 END) AS lost,
+      SUM(CASE WHEN result = 'abandoned' THEN 1 ELSE 0 END) AS abandoned,
+      COALESCE(SUM(errors), 0) AS total_errors,
+      COALESCE(AVG(duration_seconds), 0) AS avg_duration
+    FROM game_sessions
+  `).get();
+
+  const players = database.prepare('SELECT COUNT(*) AS count FROM players').get();
+  const words = loadWords(true);
+
+  return {
+    players: Number(players?.count || 0),
+    sessions: Number(sessions?.sessions || 0),
+    won: Number(sessions?.won || 0),
+    lost: Number(sessions?.lost || 0),
+    abandoned: Number(sessions?.abandoned || 0),
+    total_errors: Number(sessions?.total_errors || 0),
+    average_duration: Number(Number(sessions?.avg_duration || 0).toFixed(2)),
+    dictionary_size: words.length
+  };
+}
+
+function listSessions(limit = 100) {
+  const database = getDb();
+  return database.prepare(`
+    SELECT id, player_id, word, word_id, direction, result, errors, letters_tried, duration_seconds, hint_used, played_at
+    FROM game_sessions
+    ORDER BY played_at DESC
+    LIMIT ?
+  `).all(Number(limit) || 100).map((row) => ({
+    ...row,
+    letters_tried: safeJsonParse(row.letters_tried, [])
+  }));
+}
+
+function listWordStats() {
+  const database = getDb();
+  const words = loadWords(true);
+  const stats = database.prepare('SELECT * FROM word_stats').all();
+  const statsMap = new Map(stats.map((row) => [row.word_id, row]));
+
+  return words.map((word) => {
+    const row = statsMap.get(word.id) || {
+      word_id: word.id,
+      play_count: 0,
+      win_count: 0,
+      lose_count: 0,
+      abandon_count: 0,
+      total_errors: 0,
+      total_duration: 0,
+      complexity_score: 0,
+      complexity_label: 'moyen',
+      last_updated: null
+    };
+
+    return {
+      ...word,
+      ...row
+    };
+  });
+}
+
+function safeJsonParse(value, fallback) {
+  try {
+    return JSON.parse(value || '[]');
+  } catch (_error) {
+    return fallback;
+  }
+}
+
 module.exports = {
   initDatabase,
   getDb,
   loadWords,
+  writeWords,
+  listWords,
+  getWordById,
+  upsertWord,
+  deleteWord,
   getRandomWordRecord,
   upsertPlayer,
   recordGameSession,
   computeComplexity,
   normalizeDirection,
-  normalizeResult
+  normalizeResult,
+  getStatsSummary,
+  listSessions,
+  listWordStats,
+  normalizeWordRecord,
+  generateWordId
 };
