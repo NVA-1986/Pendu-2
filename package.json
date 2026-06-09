@@ -1,11 +1,13 @@
 {
   "name": "pendu-schwiiz",
-  "version": "1.0.12",
+  "version": "1.1.0",
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "start": "node backend/server.js",
-    "dev": "node backend/server.js"
+    "start": "node backend/public-server.js",
+    "start:public": "node backend/public-server.js",
+    "start:admin": "node backend/admin-server.js",
+    "dev": "node backend/public-server.js"
   },
   "dependencies": {
     "better-sqlite3": "^11.10.0",
