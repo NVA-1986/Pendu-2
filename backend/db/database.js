@@ -73,19 +73,22 @@ function safeParseWords(raw) {
 
 function normalizeWordRecord(word) {
   const id = String(word?.id || '').trim();
-  const baseWord = String(word?.word || '').trim();
   const translation = String(word?.translation || '').trim();
   const deutch = String(word?.deutch || '').trim();
   const category = String(word?.category || '').trim();
   const dialect = String(word?.dialect || '').trim();
   const hint = String(word?.hint || '').trim();
-  const length = Number.isInteger(word?.length) && word.length > 0 ? word.length : [...baseWord].length;
 
   if (!id) {
     throw new Error('word.id is required');
   }
-  if (!baseWord) {
-    throw new Error(`word.word is required for ${id}`);
+
+  const fallbackWord = translation || deutch || '[mot manquant]';
+  const baseWord = String(word?.word || fallbackWord).trim();
+  const length = Number.isInteger(word?.length) && word.length > 0 ? word.length : [...baseWord].length;
+
+  if (!word?.word || !String(word.word).trim()) {
+    console.warn(`[words] entrée sans mot pour ${id}, fallback appliqué`);
   }
 
   return {
