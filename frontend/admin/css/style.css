@@ -116,6 +116,12 @@ button, input, select, textarea {
   font-weight: 700;
 }
 
+.checkbox-row {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+}
+
 .stack input,
 .stack select,
 .stack textarea {

@@ -4,7 +4,7 @@ set -euo pipefail
 APP_DIR="${APP_DIR:-/opt/henker-spiel}"
 PUBLIC_SERVICE="${PUBLIC_SERVICE:-henker-spiel}"
 ADMIN_SERVICE="${ADMIN_SERVICE:-henker-spiel-admin}"
-BRANCH="${BRANCH:-V2}"
+BRANCH="${BRANCH:-main}"
 
 if [[ ${EUID:-$(id -u)} -ne 0 ]]; then
   echo "Ce script doit être exécuté en root." >&2

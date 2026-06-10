@@ -47,12 +47,13 @@ function buildWordPayload(word, direction) {
 }
 
 function pickRandomWord(words, direction) {
-  if (!words.length) {
-    throw new Error('No word available');
+  const enabledWords = words.filter((word) => word.enabled !== false);
+  if (!enabledWords.length) {
+    throw new Error('No enabled word available');
   }
 
-  const index = Math.floor(Math.random() * words.length);
-  return buildWordPayload(words[index], direction);
+  const index = Math.floor(Math.random() * enabledWords.length);
+  return buildWordPayload(enabledWords[index], direction);
 }
 
 async function fetchRandomWord(direction = 'FR_TO_DE') {

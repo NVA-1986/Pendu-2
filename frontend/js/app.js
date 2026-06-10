@@ -19,6 +19,7 @@ const els = {
   directionBtn: document.getElementById('direction-btn'),
   hintText: document.getElementById('hint-text'),
   hintMeta: document.getElementById('hint-meta'),
+  hintGerman: document.getElementById('hint-german'),
   wordDisplay: document.getElementById('word-display'),
   statusText: document.getElementById('status-text'),
   keyboard: document.getElementById('keyboard'),
@@ -38,7 +39,8 @@ const state = {
   guessedLetters: new Set(),
   lettersTried: [],
   loading: false,
-  theme: getSavedTheme()
+  theme: getSavedTheme(),
+  germanHintRevealed: false
 };
 
 function getSavedDirection() {
@@ -157,7 +159,19 @@ function renderHintMeta() {
 function renderHint() {
   const prompt = getPromptHint() || '—';
   const hint = state.currentWord?.secondary_hint ? state.currentWord.secondary_hint.toUpperCase() : '';
-  els.hintText.textContent = hint ? `[(${hint}) - ${prompt}]` : prompt;
+  els.hintText.textContent = hint ? `(${hint}) - ${prompt}` : prompt;
+
+  const germanWord = String(state.currentWord?.german_translation || '').trim();
+  if (germanWord) {
+    els.hintGerman.classList.remove('hidden');
+    els.hintGerman.classList.toggle('is-blurred', !state.germanHintRevealed);
+    els.hintGerman.classList.toggle('is-revealed', state.germanHintRevealed);
+    els.hintGerman.textContent = `Allemand : ${germanWord}`;
+  } else {
+    els.hintGerman.classList.add('hidden');
+    els.hintGerman.textContent = '';
+  }
+
   renderHintMeta();
 }
 
@@ -201,6 +215,7 @@ function resetRoundUi() {
   state.sessionId = createUuid();
   state.currentWord = null;
   state.loading = true;
+  state.germanHintRevealed = false;
 
   resetKeyboard();
   lockKeyboard(false);
@@ -209,6 +224,8 @@ function resetRoundUi() {
   els.wordDisplay.innerHTML = '';
   els.hintText.textContent = 'Chargement...';
   els.hintMeta.textContent = '';
+  els.hintGerman.classList.add('hidden');
+  els.hintGerman.textContent = '';
   updateStatus('');
 }
 
@@ -368,7 +385,7 @@ async function init() {
   renderKeyboard(els.keyboard, handleGuess);
   renderDirectionLabel();
   applyTheme(state.theme);
-  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '1.1.0'}`;
+  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '1.1.1'}`;
   registerPhysicalKeyboard();
   registerBeforeUnload();
   registerPwa();
@@ -384,6 +401,21 @@ async function init() {
 
   els.themeBtn.addEventListener('click', () => {
     applyTheme(state.theme === 'dark' ? 'light' : 'dark');
+  });
+
+  els.hintGerman.addEventListener('click', () => {
+    if (els.hintGerman.classList.contains('hidden')) return;
+    state.germanHintRevealed = !state.germanHintRevealed;
+    renderHint();
+  });
+
+  els.hintGerman.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      if (els.hintGerman.classList.contains('hidden')) return;
+      state.germanHintRevealed = !state.germanHintRevealed;
+      renderHint();
+    }
   });
 
   await restorePendingAbandonment();

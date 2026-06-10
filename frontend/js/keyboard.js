@@ -54,13 +54,13 @@ function setKeyState(letter, state) {
   const button = keyMap.get(normalized);
   if (!button) return;
 
-  button.classList.remove('is-correct', 'is-wrong', 'is-disabled');
+  button.classList.remove('is-correct', 'is-wrong', 'is-disabled', 'is-tested');
   button.dataset.locked = 'true';
 
   if (state === 'correct') {
-    button.classList.add('is-correct');
+    button.classList.add('is-tested', 'is-correct');
   } else if (state === 'wrong') {
-    button.classList.add('is-wrong');
+    button.classList.add('is-tested', 'is-wrong');
   } else if (state === 'disabled') {
     button.classList.add('is-disabled');
     button.disabled = true;
@@ -69,7 +69,7 @@ function setKeyState(letter, state) {
 
 function resetKeyboard() {
   for (const button of keyMap.values()) {
-    button.classList.remove('is-correct', 'is-wrong', 'is-disabled');
+    button.classList.remove('is-correct', 'is-wrong', 'is-disabled', 'is-tested');
     button.disabled = false;
     button.dataset.locked = 'false';
   }

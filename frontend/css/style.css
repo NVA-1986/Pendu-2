@@ -67,6 +67,10 @@ button {
   font: inherit;
 }
 
+.hidden {
+  display: none !important;
+}
+
 .app-shell {
   max-width: 760px;
   margin: 0 auto;
@@ -211,6 +215,23 @@ body.theme-dark .theme-toggle__icon {
   line-height: 1.4;
 }
 
+.hint-german {
+  margin-top: 8px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.hint-german.is-blurred {
+  filter: blur(5px);
+}
+
+.hint-german.is-revealed {
+  filter: none;
+  color: var(--text);
+}
+
 .hangman-card {
   display: flex;
   justify-content: center;
@@ -341,16 +362,20 @@ body.theme-dark .key {
   transform: scale(0.98);
 }
 
+.key.is-tested {
+  border-width: 2px;
+}
+
 .key.is-correct {
-  background: #2e7d32;
-  border-color: #2e7d32;
-  color: #fff;
+  background: #22c55e;
+  border-color: #166534;
+  color: #ffffff;
 }
 
 .key.is-wrong {
-  background: #374151;
-  border-color: #374151;
-  color: #fff;
+  background: #ef4444;
+  border-color: #7f1d1d;
+  color: #ffffff;
 }
 
 .key.is-disabled,

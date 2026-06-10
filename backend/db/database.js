@@ -78,6 +78,7 @@ function normalizeWordRecord(word) {
   const category = String(word?.category || '').trim();
   const dialect = String(word?.dialect || '').trim();
   const hint = String(word?.hint || '').trim();
+  const enabled = word?.enabled === false ? false : true;
 
   if (!id) {
     throw new Error('word.id is required');
@@ -99,7 +100,8 @@ function normalizeWordRecord(word) {
     category,
     dialect,
     hint,
-    length
+    length,
+    enabled
   };
 }
 
@@ -143,7 +145,8 @@ function upsertWord(input) {
     category: input.category || '',
     dialect: input.dialect || '',
     hint: input.hint || '',
-    length: Number.isInteger(input.length) ? input.length : undefined
+    length: Number.isInteger(input.length) ? input.length : undefined,
+    enabled: input.enabled !== false
   });
 
   const index = words.findIndex((word) => word.id === normalized.id);
@@ -167,15 +170,23 @@ function deleteWord(wordId) {
   return true;
 }
 
+function setAllWordsEnabled(enabled) {
+  const words = loadWords(true);
+  const next = words.map((word) => ({ ...word, enabled: Boolean(enabled) }));
+  writeWords(next);
+  return next.length;
+}
+
 function generateWordId() {
   return `word_${crypto.randomUUID().slice(0, 8)}`;
 }
 
 function getRandomWordRecord() {
   const words = loadWords();
-  if (!words.length) return null;
-  const index = Math.floor(Math.random() * words.length);
-  return words[index];
+  const enabledWords = words.filter((word) => word.enabled !== false);
+  if (!enabledWords.length) return null;
+  const index = Math.floor(Math.random() * enabledWords.length);
+  return enabledWords[index];
 }
 
 function normalizeDirection(direction) {
@@ -389,6 +400,7 @@ module.exports = {
   getWordById,
   upsertWord,
   deleteWord,
+  setAllWordsEnabled,
   getRandomWordRecord,
   upsertPlayer,
   recordGameSession,

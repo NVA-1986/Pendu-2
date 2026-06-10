@@ -4,7 +4,12 @@ const state = {
   sessions: [],
   wordStats: [],
   summary: null,
-  activeTab: 'stats'
+  activeTab: 'stats',
+  sorts: {
+    sessions: { key: 'played_at', dir: 'desc' },
+    wordStats: { key: 'play_count', dir: 'desc' },
+    words: { key: 'word', dir: 'asc' }
+  }
 };
 
 const els = {
@@ -27,7 +32,10 @@ const els = {
   categoryInput: document.getElementById('category-input'),
   dialectInput: document.getElementById('dialect-input'),
   lengthInput: document.getElementById('length-input'),
-  wordReset: document.getElementById('word-reset')
+  enabledInput: document.getElementById('enabled-input'),
+  wordReset: document.getElementById('word-reset'),
+  enableAllBtn: document.getElementById('enable-all-btn'),
+  disableAllBtn: document.getElementById('disable-all-btn')
 };
 
 function qs(path) {
@@ -44,19 +52,54 @@ async function api(path, options = {}) {
     ...options
   });
 
-  let data = null;
-  try {
-    data = await response.json();
-  } catch (_error) {
-    data = null;
-  }
-
+  const data = await response.json().catch(() => null);
   if (!response.ok) {
-    const message = data?.message || data?.error || `HTTP ${response.status}`;
-    throw new Error(message);
+    throw new Error(data?.message || data?.error || `HTTP ${response.status}`);
   }
-
   return data;
+}
+
+function formatValue(value) {
+  return value === null || value === undefined || value === '' ? '—' : value;
+}
+
+function sortRows(rows, sortConfig) {
+  const { key, dir } = sortConfig;
+  const factor = dir === 'asc' ? 1 : -1;
+  return [...rows].sort((a, b) => {
+    const va = a[key];
+    const vb = b[key];
+    if (va === vb) return 0;
+    if (va === null || va === undefined) return 1;
+    if (vb === null || vb === undefined) return -1;
+    if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * factor;
+    return String(va).localeCompare(String(vb), 'fr', { sensitivity: 'base' }) * factor;
+  });
+}
+
+function updateSort(table, key) {
+  const current = state.sorts[table];
+  if (current.key === key) {
+    current.dir = current.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    current.key = key;
+    current.dir = 'asc';
+  }
+}
+
+function renderSortHeader(table, key, label) {
+  const current = state.sorts[table];
+  const arrow = current.key === key ? (current.dir === 'asc' ? '▲' : '▼') : '';
+  return `<button class="btn btn--ghost" data-sort-table="${table}" data-sort-key="${key}" type="button">${label} ${arrow}</button>`;
+}
+
+function attachSortHandlers() {
+  document.querySelectorAll('[data-sort-table]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      updateSort(btn.dataset.sortTable, btn.dataset.sortKey);
+      renderAllTables();
+    });
+  });
 }
 
 function showLogin(message = '') {
@@ -74,10 +117,6 @@ function showApp() {
   els.loginError.hidden = true;
 }
 
-function formatValue(value) {
-  return value === null || value === undefined || value === '' ? '—' : value;
-}
-
 function renderKpis() {
   const s = state.summary || {};
   const items = [
@@ -86,35 +125,35 @@ function renderKpis() {
     ['Victoires', s.won],
     ['Défaites', s.lost],
     ['Abandons', s.abandoned],
-    ['Erreurs totales', s.total_errors],
+    ['Erreurs', s.total_errors],
     ['Durée moy. (s)', s.average_duration],
     ['Mots', s.dictionary_size]
   ];
-
-  els.summaryKpis.innerHTML = items.map(([label, value]) => `
-    <div class="kpi">
-      <div class="kpi__label">${label}</div>
-      <div class="kpi__value">${formatValue(value)}</div>
-    </div>
-  `).join('');
+  els.summaryKpis.innerHTML = items
+    .map(([label, value]) => `<div class="kpi"><div class="kpi__label">${label}</div><div class="kpi__value">${formatValue(value)}</div></div>`)
+    .join('');
 }
 
 function renderSessions() {
-  const rows = state.sessions || [];
+  const rows = sortRows(state.sessions || [], state.sorts.sessions);
   els.sessionsTable.innerHTML = `
     <thead>
       <tr>
-        <th>Date</th><th>Mot</th><th>Résultat</th><th>Err.</th><th>Durée</th>
+        <th>${renderSortHeader('sessions', 'played_at', 'Date')}</th>
+        <th>${renderSortHeader('sessions', 'word', 'Mot')}</th>
+        <th>${renderSortHeader('sessions', 'result', 'Résultat')}</th>
+        <th>${renderSortHeader('sessions', 'errors', 'Err.')}</th>
+        <th>${renderSortHeader('sessions', 'duration_seconds', 'Durée')}</th>
       </tr>
     </thead>
     <tbody>
       ${rows.map((row) => `
         <tr>
           <td>${new Date(row.played_at).toLocaleString('fr-CH')}</td>
-          <td>${row.word}</td>
-          <td>${row.result}</td>
-          <td>${row.errors}</td>
-          <td>${row.duration_seconds}s</td>
+          <td>${formatValue(row.word)}</td>
+          <td>${formatValue(row.result)}</td>
+          <td>${formatValue(row.errors)}</td>
+          <td>${formatValue(row.duration_seconds)}s</td>
         </tr>
       `).join('')}
     </tbody>
@@ -122,17 +161,21 @@ function renderSessions() {
 }
 
 function renderWordStats() {
-  const rows = state.wordStats || [];
+  const rows = sortRows(state.wordStats || [], state.sorts.wordStats);
   els.wordStatsTable.innerHTML = `
     <thead>
       <tr>
-        <th>Mot</th><th>FR</th><th>Parties</th><th>Succès</th><th>Complexité</th>
+        <th>${renderSortHeader('wordStats', 'word', 'Mot')}</th>
+        <th>${renderSortHeader('wordStats', 'translation', 'FR')}</th>
+        <th>${renderSortHeader('wordStats', 'play_count', 'Parties')}</th>
+        <th>${renderSortHeader('wordStats', 'win_count', 'Victoires')}</th>
+        <th>${renderSortHeader('wordStats', 'complexity_label', 'Complexité')}</th>
       </tr>
     </thead>
     <tbody>
       ${rows.map((row) => `
         <tr>
-          <td>${row.word}</td>
+          <td>${formatValue(row.word)}</td>
           <td>${formatValue(row.translation)}</td>
           <td>${row.play_count || 0}</td>
           <td>${row.win_count || 0}</td>
@@ -144,11 +187,16 @@ function renderWordStats() {
 }
 
 function renderWords() {
-  const rows = state.words || [];
+  const rows = sortRows(state.words || [], state.sorts.words);
   els.wordsTable.innerHTML = `
     <thead>
       <tr>
-        <th>ID</th><th>Mot</th><th>FR</th><th>Hint</th><th>Actions</th>
+        <th>${renderSortHeader('words', 'id', 'ID')}</th>
+        <th>${renderSortHeader('words', 'word', 'Mot')}</th>
+        <th>${renderSortHeader('words', 'translation', 'FR')}</th>
+        <th>${renderSortHeader('words', 'hint', 'Région')}</th>
+        <th>${renderSortHeader('words', 'enabled', 'Actif')}</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -158,9 +206,11 @@ function renderWords() {
           <td>${row.word}</td>
           <td>${formatValue(row.translation)}</td>
           <td>${formatValue(row.hint)}</td>
+          <td>${row.enabled !== false ? 'Oui' : 'Non'}</td>
           <td>
             <div class="actions">
               <button class="btn btn--ghost" data-edit="${row.id}" type="button">Éditer</button>
+              <button class="btn btn--ghost" data-toggle="${row.id}" type="button">${row.enabled !== false ? 'Désactiver' : 'Activer'}</button>
               <button class="btn btn--ghost" data-delete="${row.id}" type="button">Suppr.</button>
             </div>
           </td>
@@ -172,9 +222,19 @@ function renderWords() {
   els.wordsTable.querySelectorAll('[data-edit]').forEach((btn) => {
     btn.addEventListener('click', () => fillWordForm(rows.find((w) => w.id === btn.dataset.edit)));
   });
+  els.wordsTable.querySelectorAll('[data-toggle]').forEach((btn) => {
+    btn.addEventListener('click', () => toggleWord(btn.dataset.toggle));
+  });
   els.wordsTable.querySelectorAll('[data-delete]').forEach((btn) => {
     btn.addEventListener('click', () => deleteWord(btn.dataset.delete));
   });
+}
+
+function renderAllTables() {
+  renderSessions();
+  renderWordStats();
+  renderWords();
+  attachSortHandlers();
 }
 
 function fillWordForm(word = null) {
@@ -187,6 +247,7 @@ function fillWordForm(word = null) {
   els.categoryInput.value = word?.category || '';
   els.dialectInput.value = word?.dialect || '';
   els.lengthInput.value = word?.length || '';
+  els.enabledInput.checked = word ? word.enabled !== false : true;
 }
 
 async function loadData() {
@@ -201,14 +262,30 @@ async function loadData() {
   state.wordStats = wordStats;
   state.words = words;
   renderKpis();
-  renderSessions();
-  renderWordStats();
-  renderWords();
+  renderAllTables();
 }
 
 async function deleteWord(id) {
   if (!confirm('Supprimer ce mot ?')) return;
   await api(`/api/words/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  await loadData();
+}
+
+async function toggleWord(id) {
+  const word = state.words.find((w) => w.id === id);
+  if (!word) return;
+  await api(`/api/words/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    body: JSON.stringify({ ...word, enabled: word.enabled === false })
+  });
+  await loadData();
+}
+
+async function setAllWordsEnabled(enabled) {
+  await api('/api/words/bulk-enable', {
+    method: 'POST',
+    body: JSON.stringify({ enabled })
+  });
   await loadData();
 }
 
@@ -229,7 +306,7 @@ async function handleLogin(event) {
     });
     showApp();
     await loadData();
-  } catch (error) {
+  } catch (_error) {
     showLogin('Mot de passe invalide');
   }
 }
@@ -249,7 +326,8 @@ async function handleWordSubmit(event) {
     hint: els.hintInput.value.trim(),
     category: els.categoryInput.value.trim(),
     dialect: els.dialectInput.value.trim(),
-    length: els.lengthInput.value ? Number(els.lengthInput.value) : undefined
+    length: els.lengthInput.value ? Number(els.lengthInput.value) : undefined,
+    enabled: els.enabledInput.checked
   };
 
   await api(payload.id ? `/api/words/${encodeURIComponent(payload.id)}` : '/api/words', {
@@ -266,6 +344,8 @@ async function boot() {
   els.logoutBtn.addEventListener('click', handleLogout);
   els.wordForm.addEventListener('submit', handleWordSubmit);
   els.wordReset.addEventListener('click', () => fillWordForm());
+  els.enableAllBtn.addEventListener('click', () => setAllWordsEnabled(true));
+  els.disableAllBtn.addEventListener('click', () => setAllWordsEnabled(false));
   document.querySelectorAll('.tab').forEach((btn) => btn.addEventListener('click', () => setTab(btn.dataset.tab)));
 
   const auth = await qs('/api/auth/me');

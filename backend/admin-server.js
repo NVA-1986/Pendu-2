@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const { initDatabase, getStatsSummary, listSessions, listWordStats, listWords, upsertWord, deleteWord, getWordById } = require('./db/database');
+const { initDatabase, getStatsSummary, listSessions, listWordStats, listWords, upsertWord, deleteWord, getWordById, setAllWordsEnabled } = require('./db/database');
 const { authCookie, createSessionToken, validatePassword, verifySessionToken, readSessionToken, requireAdmin } = require('./admin-auth');
 
 initDatabase();
@@ -90,6 +90,12 @@ app.delete('/api/words/:id', requireAdmin, (req, res) => {
     return res.status(404).json({ error: 'not_found' });
   }
   return res.json({ ok: true });
+});
+
+app.post('/api/words/bulk-enable', requireAdmin, (req, res) => {
+  const enabled = req.body?.enabled !== false;
+  const count = setAllWordsEnabled(enabled);
+  return res.json({ ok: true, count, enabled });
 });
 
 app.get('*', (_req, res) => {

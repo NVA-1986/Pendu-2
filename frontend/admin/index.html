@@ -62,6 +62,7 @@
                 <label>Catégorie<input id="category-input" /></label>
                 <label>Dialecte<input id="dialect-input" /></label>
                 <label>Longueur<input id="length-input" type="number" min="1" /></label>
+                <label class="checkbox-row"><input id="enabled-input" type="checkbox" checked /> Mot actif</label>
                 <div class="row">
                   <button class="btn" type="submit">Enregistrer</button>
                   <button id="word-reset" class="btn btn--ghost" type="button">Nouveau</button>
@@ -70,6 +71,10 @@
             </div>
             <div>
               <h2>Dictionnaire</h2>
+              <div class="row" style="margin-bottom:10px;">
+                <button id="enable-all-btn" class="btn btn--ghost" type="button">Tout activer</button>
+                <button id="disable-all-btn" class="btn btn--ghost" type="button">Tout désactiver</button>
+              </div>
               <div class="table-wrap"><table id="words-table" class="table"></table></div>
             </div>
           </div>
