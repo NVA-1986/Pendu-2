@@ -364,18 +364,21 @@ body.theme-dark .key {
 
 .key.is-tested {
   border-width: 2px;
+  background: #f59e0b !important;
+  border-color: #b45309 !important;
+  color: #111111 !important;
 }
 
 .key.is-correct {
-  background: #22c55e;
-  border-color: #166534;
-  color: #ffffff;
+  background: #f59e0b !important;
+  border-color: #b45309 !important;
+  color: #111111 !important;
 }
 
 .key.is-wrong {
-  background: #ef4444;
-  border-color: #7f1d1d;
-  color: #ffffff;
+  background: #f59e0b !important;
+  border-color: #b45309 !important;
+  color: #111111 !important;
 }
 
 .key.is-disabled,

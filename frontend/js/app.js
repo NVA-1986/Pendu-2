@@ -156,12 +156,16 @@ function renderHintMeta() {
   els.hintMeta.textContent = meta.join(' • ');
 }
 
-function renderHint() {
-  const prompt = getPromptHint() || '—';
-  const hint = state.currentWord?.secondary_hint ? state.currentWord.secondary_hint.toUpperCase() : '';
-  els.hintText.textContent = hint ? `(${hint}) - ${prompt}` : prompt;
+function cleanBracketText(value) {
+  return String(value || '').replace(/[\[\]]/g, '').trim();
+}
 
-  const germanWord = String(state.currentWord?.german_translation || '').trim();
+function renderHint() {
+  const prompt = cleanBracketText(getPromptHint() || '—');
+  const hint = state.currentWord?.secondary_hint ? cleanBracketText(state.currentWord.secondary_hint).toUpperCase() : '';
+  els.hintText.textContent = hint ? `${hint} - ${prompt}` : prompt;
+
+  const germanWord = String(state.currentWord?.german_translation || state.currentWord?.deutch || '').trim();
   if (germanWord) {
     els.hintGerman.classList.remove('hidden');
     els.hintGerman.classList.toggle('is-blurred', !state.germanHintRevealed);
@@ -385,7 +389,7 @@ async function init() {
   renderKeyboard(els.keyboard, handleGuess);
   renderDirectionLabel();
   applyTheme(state.theme);
-  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '1.1.1'}`;
+  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '1.1.2'}`;
   registerPhysicalKeyboard();
   registerBeforeUnload();
   registerPwa();
