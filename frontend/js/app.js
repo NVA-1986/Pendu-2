@@ -120,11 +120,11 @@ function applyTheme(theme) {
   document.documentElement.style.colorScheme = theme;
 
 
-  document.documentElement.style.setProperty('--key-bg', isDark ? '#d1d5db' : '#ffffff');
-  document.documentElement.style.setProperty('--key-border', isDark ? '#9ca3af' : '#d1d5db');
+  document.documentElement.style.setProperty('--key-bg', '#ffffff');
+  document.documentElement.style.setProperty('--key-border', '#d1d5db');
   document.documentElement.style.setProperty('--key-text', '#111111');
-  document.documentElement.style.setProperty('--key-tested-bg', isDark ? '#6b7280' : '#d1d5db');
-  document.documentElement.style.setProperty('--key-tested-border', isDark ? '#374151' : '#6b7280');
+  document.documentElement.style.setProperty('--key-tested-bg', '#d1d5db');
+  document.documentElement.style.setProperty('--key-tested-border', '#6b7280');
   document.documentElement.style.setProperty('--key-tested-text', '#111111');
   refreshKeyboardTheme();
 
@@ -394,7 +394,7 @@ async function init() {
   renderKeyboard(els.keyboard, handleGuess);
   renderDirectionLabel();
   applyTheme(state.theme);
-  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '1.1.6'}`;
+  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '1.1.7'}`;
   registerPhysicalKeyboard();
   registerBeforeUnload();
   registerPwa();

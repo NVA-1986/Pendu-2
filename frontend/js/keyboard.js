@@ -5,35 +5,18 @@ const keyMap = new Map();
 let keyboardRoot = null;
 let keyPressHandler = null;
 
-function isDarkTheme() {
-  const theme = document.body?.dataset?.theme || document.documentElement?.dataset?.theme;
-  return theme === 'dark';
-}
-
 function applyBaseStyle(button) {
   if (!button) return;
-  if (isDarkTheme()) {
-    button.style.backgroundColor = '#d1d5db';
-    button.style.borderColor = '#9ca3af';
-    button.style.color = '#111111';
-  } else {
-    button.style.backgroundColor = '#ffffff';
-    button.style.borderColor = '#d1d5db';
-    button.style.color = '#111111';
-  }
+  button.style.backgroundColor = '#ffffff';
+  button.style.borderColor = '#d1d5db';
+  button.style.color = '#111111';
 }
 
 function applyTestedStyle(button) {
   if (!button) return;
-  if (isDarkTheme()) {
-    button.style.backgroundColor = '#6b7280';
-    button.style.borderColor = '#374151';
-    button.style.color = '#111111';
-  } else {
-    button.style.backgroundColor = '#d1d5db';
-    button.style.borderColor = '#6b7280';
-    button.style.color = '#111111';
-  }
+  button.style.backgroundColor = '#d1d5db';
+  button.style.borderColor = '#6b7280';
+  button.style.color = '#111111';
 }
 
 function normalizeKey(letter) {
