@@ -27,10 +27,16 @@ app.get('/config.js', (_req, res) => {
   res.send(`window.APP_CONFIG = ${JSON.stringify({ version: appVersion, matomoUrl: '//matomo.oblivium.ch/', matomoSiteId: '1' })};`);
 });
 
-app.use('/data', express.static(dataDir, { maxAge: '1h' }));
+app.use('/data', express.static(dataDir, {
+  maxAge: 0,
+  setHeaders: (res) => res.setHeader('Cache-Control', 'no-store')
+}));
 app.use('/api/words', wordsRouter);
 app.use('/api', statsRouter);
-app.use(express.static(frontendDir, { maxAge: '1h' }));
+app.use(express.static(frontendDir, {
+  maxAge: 0,
+  setHeaders: (res) => res.setHeader('Cache-Control', 'no-store')
+}));
 
 app.get('*', (_req, res) => {
   res.sendFile(path.join(frontendDir, 'index.html'));
