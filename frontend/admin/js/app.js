@@ -35,7 +35,10 @@ const els = {
   enabledInput: document.getElementById('enabled-input'),
   wordReset: document.getElementById('word-reset'),
   enableAllBtn: document.getElementById('enable-all-btn'),
-  disableAllBtn: document.getElementById('disable-all-btn')
+  disableAllBtn: document.getElementById('disable-all-btn'),
+  importForm: document.getElementById('import-form'),
+  importFile: document.getElementById('import-file'),
+  importReplace: document.getElementById('import-replace')
 };
 
 function qs(path) {
@@ -339,6 +342,25 @@ async function handleWordSubmit(event) {
   await loadData();
 }
 
+async function handleImport(event) {
+  event.preventDefault();
+  const file = els.importFile.files?.[0];
+  if (!file) return;
+
+  const content = await file.text();
+  const parsed = JSON.parse(content);
+  await api('/api/words/import', {
+    method: 'POST',
+    body: JSON.stringify({
+      words: parsed,
+      replace: els.importReplace.checked
+    })
+  });
+
+  els.importForm.reset();
+  await loadData();
+}
+
 async function boot() {
   els.loginForm.addEventListener('submit', handleLogin);
   els.logoutBtn.addEventListener('click', handleLogout);
@@ -346,6 +368,9 @@ async function boot() {
   els.wordReset.addEventListener('click', () => fillWordForm());
   els.enableAllBtn.addEventListener('click', () => setAllWordsEnabled(true));
   els.disableAllBtn.addEventListener('click', () => setAllWordsEnabled(false));
+  els.importForm.addEventListener('submit', (event) => {
+    handleImport(event).catch((error) => alert(`Import impossible: ${error.message}`));
+  });
   document.querySelectorAll('.tab').forEach((btn) => btn.addEventListener('click', () => setTab(btn.dataset.tab)));
 
   const auth = await qs('/api/auth/me');

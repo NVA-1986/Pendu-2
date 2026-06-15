@@ -177,6 +177,34 @@ function setAllWordsEnabled(enabled) {
   return next.length;
 }
 
+function importWords(records, options = {}) {
+  if (!Array.isArray(records)) {
+    throw new Error('words must be an array');
+  }
+
+  const replace = options?.replace === true;
+  const base = replace ? [] : loadWords(true);
+  const byId = new Map(base.map((word) => [word.id, word]));
+
+  for (const rawWord of records) {
+    const prepared = {
+      ...rawWord,
+      id: String(rawWord?.id || '').trim() || generateWordId()
+    };
+    const normalized = normalizeWordRecord(prepared);
+    byId.set(normalized.id, normalized);
+  }
+
+  const merged = Array.from(byId.values());
+  writeWords(merged);
+
+  return {
+    imported: records.length,
+    total: merged.length,
+    replaced: replace
+  };
+}
+
 function generateWordId() {
   return `word_${crypto.randomUUID().slice(0, 8)}`;
 }
@@ -401,6 +429,7 @@ module.exports = {
   upsertWord,
   deleteWord,
   setAllWordsEnabled,
+  importWords,
   getRandomWordRecord,
   upsertPlayer,
   recordGameSession,

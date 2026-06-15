@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const { initDatabase, getStatsSummary, listSessions, listWordStats, listWords, upsertWord, deleteWord, getWordById, setAllWordsEnabled } = require('./db/database');
+const { initDatabase, getStatsSummary, listSessions, listWordStats, listWords, upsertWord, deleteWord, getWordById, setAllWordsEnabled, importWords } = require('./db/database');
 const { authCookie, createSessionToken, validatePassword, verifySessionToken, readSessionToken, requireAdmin } = require('./admin-auth');
 
 initDatabase();
@@ -96,6 +96,17 @@ app.post('/api/words/bulk-enable', requireAdmin, (req, res) => {
   const enabled = req.body?.enabled !== false;
   const count = setAllWordsEnabled(enabled);
   return res.json({ ok: true, count, enabled });
+});
+
+app.post('/api/words/import', requireAdmin, (req, res) => {
+  try {
+    const words = req.body?.words;
+    const replace = req.body?.replace === true;
+    const result = importWords(words, { replace });
+    return res.status(201).json({ ok: true, ...result });
+  } catch (error) {
+    return res.status(400).json({ error: 'invalid_import', message: error.message });
+  }
 });
 
 app.get('*', (_req, res) => {

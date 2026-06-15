@@ -152,7 +152,7 @@ function applyTheme(theme) {
 function renderHintMeta() {
   const meta = [];
   if (getLengthHint()) meta.push(`Longueur : ${getLengthHint()}`);
-  if (state.currentWord?.secondary_hint) meta.push(`Indice secondaire : ${state.currentWord.secondary_hint}`);
+  if (state.currentWord?.secondary_hint) meta.push(`Indice secondaire : ${cleanBracketText(state.currentWord.secondary_hint)}`);
   els.hintMeta.textContent = meta.join(' • ');
 }
 
@@ -389,7 +389,7 @@ async function init() {
   renderKeyboard(els.keyboard, handleGuess);
   renderDirectionLabel();
   applyTheme(state.theme);
-  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '1.1.2'}`;
+  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '1.1.3'}`;
   registerPhysicalKeyboard();
   registerBeforeUnload();
   registerPwa();

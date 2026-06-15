@@ -71,6 +71,13 @@
             </div>
             <div>
               <h2>Dictionnaire</h2>
+              <form id="import-form" class="stack" style="margin-bottom:10px;">
+                <label>Importer JSON
+                  <input id="import-file" type="file" accept="application/json,.json" required />
+                </label>
+                <label class="checkbox-row"><input id="import-replace" type="checkbox" /> Remplacer tout le dictionnaire</label>
+                <button class="btn btn--ghost" type="submit">Importer</button>
+              </form>
               <div class="row" style="margin-bottom:10px;">
                 <button id="enable-all-btn" class="btn btn--ghost" type="button">Tout activer</button>
                 <button id="disable-all-btn" class="btn btn--ghost" type="button">Tout désactiver</button>
