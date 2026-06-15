@@ -5,6 +5,37 @@ const keyMap = new Map();
 let keyboardRoot = null;
 let keyPressHandler = null;
 
+function isDarkTheme() {
+  const theme = document.body?.dataset?.theme || document.documentElement?.dataset?.theme;
+  return theme === 'dark';
+}
+
+function applyBaseStyle(button) {
+  if (!button) return;
+  if (isDarkTheme()) {
+    button.style.backgroundColor = '#d1d5db';
+    button.style.borderColor = '#9ca3af';
+    button.style.color = '#111111';
+  } else {
+    button.style.backgroundColor = '#ffffff';
+    button.style.borderColor = '#d1d5db';
+    button.style.color = '#111111';
+  }
+}
+
+function applyTestedStyle(button) {
+  if (!button) return;
+  if (isDarkTheme()) {
+    button.style.backgroundColor = '#6b7280';
+    button.style.borderColor = '#374151';
+    button.style.color = '#111111';
+  } else {
+    button.style.backgroundColor = '#d1d5db';
+    button.style.borderColor = '#6b7280';
+    button.style.color = '#111111';
+  }
+}
+
 function normalizeKey(letter) {
   return String(letter || '').trim().toLowerCase();
 }
@@ -24,6 +55,7 @@ function makeButton(letter) {
     }
   });
 
+  applyBaseStyle(button);
   keyMap.set(letter, button);
   return button;
 }
@@ -59,6 +91,7 @@ function setKeyState(letter, state) {
 
   if (state === 'correct' || state === 'wrong') {
     button.classList.add('is-tested', state === 'correct' ? 'is-correct' : 'is-wrong');
+    applyTestedStyle(button);
   } else if (state === 'disabled') {
     button.classList.add('is-disabled');
     button.disabled = true;
@@ -70,6 +103,7 @@ function resetKeyboard() {
     button.classList.remove('is-correct', 'is-wrong', 'is-disabled', 'is-tested');
     button.disabled = false;
     button.dataset.locked = 'false';
+    applyBaseStyle(button);
   }
 }
 
@@ -94,6 +128,16 @@ function normalizeEventKey(eventKey) {
   return '';
 }
 
+function refreshKeyboardTheme() {
+  for (const button of keyMap.values()) {
+    if (button.classList.contains('is-tested')) {
+      applyTestedStyle(button);
+    } else {
+      applyBaseStyle(button);
+    }
+  }
+}
+
 function getKeyboardRoot() {
   return keyboardRoot;
 }
@@ -105,5 +149,6 @@ export {
   lockKeyboard,
   normalizeEventKey,
   isSupportedKey,
-  getKeyboardRoot
+  getKeyboardRoot,
+  refreshKeyboardTheme
 };

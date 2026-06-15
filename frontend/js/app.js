@@ -4,7 +4,8 @@ import {
   setKeyState,
   resetKeyboard,
   lockKeyboard,
-  normalizeEventKey
+  normalizeEventKey,
+  refreshKeyboardTheme
 } from './keyboard.js';
 import { setHangmanErrors, resetHangman } from './hangman.js';
 import { queueAndSyncStat, startStatsSync } from './stats-sync.js';
@@ -125,6 +126,7 @@ function applyTheme(theme) {
   document.documentElement.style.setProperty('--key-tested-bg', isDark ? '#6b7280' : '#d1d5db');
   document.documentElement.style.setProperty('--key-tested-border', isDark ? '#374151' : '#6b7280');
   document.documentElement.style.setProperty('--key-tested-text', '#111111');
+  refreshKeyboardTheme();
 
   const hangmanNodes = document.querySelectorAll('#hangman-svg path, #hangman-svg circle');
   hangmanNodes.forEach((node) => {
@@ -392,7 +394,7 @@ async function init() {
   renderKeyboard(els.keyboard, handleGuess);
   renderDirectionLabel();
   applyTheme(state.theme);
-  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '1.1.5'}`;
+  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '1.1.6'}`;
   registerPhysicalKeyboard();
   registerBeforeUnload();
   registerPwa();
