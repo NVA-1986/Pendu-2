@@ -5,18 +5,19 @@ const keyMap = new Map();
 let keyboardRoot = null;
 let keyPressHandler = null;
 
-function applyBaseStyle(button) {
+function forceStyle(button, { bg, border, text }) {
   if (!button) return;
-  button.style.backgroundColor = '#ffffff';
-  button.style.borderColor = '#d1d5db';
-  button.style.color = '#111111';
+  button.style.setProperty('background-color', bg, 'important');
+  button.style.setProperty('border-color', border, 'important');
+  button.style.setProperty('color', text, 'important');
+}
+
+function applyBaseStyle(button) {
+  forceStyle(button, { bg: '#ffffff', border: '#d1d5db', text: '#111111' });
 }
 
 function applyTestedStyle(button) {
-  if (!button) return;
-  button.style.backgroundColor = '#d1d5db';
-  button.style.borderColor = '#6b7280';
-  button.style.color = '#111111';
+  forceStyle(button, { bg: '#d1d5db', border: '#6b7280', text: '#111111' });
 }
 
 function normalizeKey(letter) {
