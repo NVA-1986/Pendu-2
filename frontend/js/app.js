@@ -48,7 +48,8 @@ function getSavedDirection() {
 }
 
 function getSavedTheme() {
-  return 'dark';
+  const saved = localStorage.getItem('pendu-schwiiz-theme');
+  return saved === 'light' ? 'light' : 'dark';
 }
 
 function saveDirection(direction) {
@@ -117,11 +118,6 @@ function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
   document.documentElement.style.colorScheme = theme;
 
-  document.querySelectorAll('.key').forEach((key) => {
-    key.style.backgroundColor = isDark ? '#b5b5b5' : '#ffffff';
-    key.style.color = isDark ? '#000000' : '#111111';
-    key.style.borderColor = isDark ? '#8c8c8c' : '#d1d5db';
-  });
 
   const hangmanNodes = document.querySelectorAll('#hangman-svg path, #hangman-svg circle');
   hangmanNodes.forEach((node) => {
@@ -389,7 +385,7 @@ async function init() {
   renderKeyboard(els.keyboard, handleGuess);
   renderDirectionLabel();
   applyTheme(state.theme);
-  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '1.1.3'}`;
+  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '1.1.4'}`;
   registerPhysicalKeyboard();
   registerBeforeUnload();
   registerPwa();

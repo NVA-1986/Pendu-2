@@ -109,6 +109,14 @@ app.post('/api/words/import', requireAdmin, (req, res) => {
   }
 });
 
+app.get('/api/words/export', requireAdmin, (_req, res) => {
+  const words = listWords();
+  const filename = `words-export-${new Date().toISOString().slice(0, 10)}.json`;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  return res.send(`${JSON.stringify(words, null, 2)}\n`);
+});
+
 app.get('*', (_req, res) => {
   res.sendFile(path.join(adminDir, 'index.html'));
 });

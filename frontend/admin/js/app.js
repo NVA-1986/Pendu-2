@@ -34,6 +34,7 @@ const els = {
   lengthInput: document.getElementById('length-input'),
   enabledInput: document.getElementById('enabled-input'),
   wordReset: document.getElementById('word-reset'),
+  exportBtn: document.getElementById('export-btn'),
   enableAllBtn: document.getElementById('enable-all-btn'),
   disableAllBtn: document.getElementById('disable-all-btn'),
   importForm: document.getElementById('import-form'),
@@ -361,11 +362,35 @@ async function handleImport(event) {
   await loadData();
 }
 
+async function handleExport() {
+  const response = await fetch('/api/words/export', { credentials: 'include' });
+  if (!response.ok) {
+    throw new Error(`Export impossible (${response.status})`);
+  }
+
+  const blob = await response.blob();
+  const disposition = response.headers.get('content-disposition') || '';
+  const match = disposition.match(/filename="([^"]+)"/i);
+  const filename = match?.[1] || 'words-export.json';
+
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
 async function boot() {
   els.loginForm.addEventListener('submit', handleLogin);
   els.logoutBtn.addEventListener('click', handleLogout);
   els.wordForm.addEventListener('submit', handleWordSubmit);
   els.wordReset.addEventListener('click', () => fillWordForm());
+  els.exportBtn.addEventListener('click', () => {
+    handleExport().catch((error) => alert(`Export impossible: ${error.message}`));
+  });
   els.enableAllBtn.addEventListener('click', () => setAllWordsEnabled(true));
   els.disableAllBtn.addEventListener('click', () => setAllWordsEnabled(false));
   els.importForm.addEventListener('submit', (event) => {

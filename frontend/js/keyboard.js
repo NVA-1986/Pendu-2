@@ -59,9 +59,6 @@ function setKeyState(letter, state) {
 
   if (state === 'correct' || state === 'wrong') {
     button.classList.add('is-tested', state === 'correct' ? 'is-correct' : 'is-wrong');
-    button.style.backgroundColor = '#9ca3af';
-    button.style.borderColor = '#4b5563';
-    button.style.color = '#111111';
   } else if (state === 'disabled') {
     button.classList.add('is-disabled');
     button.disabled = true;
@@ -73,9 +70,6 @@ function resetKeyboard() {
     button.classList.remove('is-correct', 'is-wrong', 'is-disabled', 'is-tested');
     button.disabled = false;
     button.dataset.locked = 'false';
-    button.style.backgroundColor = '';
-    button.style.borderColor = '';
-    button.style.color = '';
   }
 }
 
