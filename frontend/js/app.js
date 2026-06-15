@@ -119,6 +119,13 @@ function applyTheme(theme) {
   document.documentElement.style.colorScheme = theme;
 
 
+  document.documentElement.style.setProperty('--key-bg', isDark ? '#d1d5db' : '#ffffff');
+  document.documentElement.style.setProperty('--key-border', isDark ? '#9ca3af' : '#d1d5db');
+  document.documentElement.style.setProperty('--key-text', '#111111');
+  document.documentElement.style.setProperty('--key-tested-bg', isDark ? '#6b7280' : '#d1d5db');
+  document.documentElement.style.setProperty('--key-tested-border', isDark ? '#374151' : '#6b7280');
+  document.documentElement.style.setProperty('--key-tested-text', '#111111');
+
   const hangmanNodes = document.querySelectorAll('#hangman-svg path, #hangman-svg circle');
   hangmanNodes.forEach((node) => {
     node.style.stroke = isDark ? '#ffffff' : '#111827';
@@ -385,7 +392,7 @@ async function init() {
   renderKeyboard(els.keyboard, handleGuess);
   renderDirectionLabel();
   applyTheme(state.theme);
-  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '1.1.4'}`;
+  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '1.1.5'}`;
   registerPhysicalKeyboard();
   registerBeforeUnload();
   registerPwa();

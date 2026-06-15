@@ -4,7 +4,9 @@ const crypto = require('crypto');
 const Database = require('better-sqlite3');
 
 const dbPath = path.join(__dirname, 'hangman.db');
-const wordsPath = path.join(__dirname, '..', 'data', 'words.json');
+const wordsPath = process.env.WORDS_PATH
+  ? path.resolve(process.env.WORDS_PATH)
+  : path.join(__dirname, '..', 'data', 'words.json');
 
 let db;
 let wordsCache = null;

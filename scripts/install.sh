@@ -12,6 +12,8 @@ ADMIN_PORT="${ADMIN_PORT:-4174}"
 PUBLIC_HOST="${PUBLIC_HOST:-0.0.0.0}"
 ADMIN_HOST="${ADMIN_HOST:-127.0.0.1}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-admin}"
+WORDS_DATA_DIR="${WORDS_DATA_DIR:-/var/lib/henker-spiel}"
+WORDS_DATA_FILE="${WORDS_DATA_FILE:-$WORDS_DATA_DIR/words.json}"
 
 if [[ ${EUID:-$(id -u)} -ne 0 ]]; then
   echo "Ce script doit être exécuté en root." >&2
@@ -30,6 +32,18 @@ mkdir -p "$(dirname "$APP_DIR")"
 
 git config --global --add safe.directory "$APP_DIR" >/dev/null 2>&1 || true
 
+mkdir -p "$WORDS_DATA_DIR"
+WORDS_BACKUP_FILE="/tmp/henker-words-install-backup.json"
+rm -f "$WORDS_BACKUP_FILE"
+if [[ -f "$WORDS_DATA_FILE" ]]; then
+  cp "$WORDS_DATA_FILE" "$WORDS_BACKUP_FILE" 2>/dev/null || true
+elif [[ -f "$APP_DIR/backend/data/words.json" ]]; then
+  cp "$APP_DIR/backend/data/words.json" "$WORDS_BACKUP_FILE" 2>/dev/null || true
+fi
+if [[ ! -f "$WORDS_DATA_FILE" ]]; then
+  echo "[]" > "$WORDS_DATA_FILE"
+fi
+
 if [[ ! -d "$APP_DIR/.git" ]]; then
   git clone -b "$BRANCH" "$REPO_URL" "$APP_DIR"
   git config --global --add safe.directory "$APP_DIR" >/dev/null 2>&1 || true
@@ -38,6 +52,12 @@ else
   git fetch origin "$BRANCH"
   git reset --hard "origin/$BRANCH"
 fi
+
+if [[ -s "$WORDS_BACKUP_FILE" ]]; then
+  cp "$WORDS_BACKUP_FILE" "$WORDS_DATA_FILE" 2>/dev/null || true
+fi
+rm -f "$WORDS_BACKUP_FILE"
+ln -sfn "$WORDS_DATA_FILE" "$APP_DIR/backend/data/words.json"
 
 if ! command -v npm >/dev/null 2>&1; then
   echo "npm introuvable après installation. Vérifie la configuration APT de Node.js." >&2
@@ -50,6 +70,7 @@ cd "$APP_DIR"
 "$NPM_BIN" install --omit=dev
 
 chown -R "$APP_USER:$APP_USER" "$APP_DIR"
+chown -R "$APP_USER:$APP_USER" "$WORDS_DATA_DIR"
 
 ADMIN_SECRET_FILE="/etc/henker-spiel-admin.env"
 if [[ ! -f "$ADMIN_SECRET_FILE" ]]; then
@@ -81,6 +102,7 @@ WorkingDirectory=$APP_DIR
 Environment=NODE_ENV=production
 Environment=PORT=$PUBLIC_PORT
 Environment=HOST=$PUBLIC_HOST
+Environment=WORDS_PATH=$WORDS_DATA_FILE
 ExecStart=$NPM_BIN run start:public
 Restart=always
 RestartSec=5
@@ -105,6 +127,7 @@ WorkingDirectory=$APP_DIR
 Environment=NODE_ENV=production
 Environment=PORT=$ADMIN_PORT
 Environment=HOST=$ADMIN_HOST
+Environment=WORDS_PATH=$WORDS_DATA_FILE
 EnvironmentFile=$ADMIN_SECRET_FILE
 ExecStart=$NPM_BIN run start:admin
 Restart=always
