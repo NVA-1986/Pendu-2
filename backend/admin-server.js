@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const { initDatabase, getStatsSummary, listSessions, listWordStats, listWords, upsertWord, deleteWord, getWordById, setAllWordsEnabled, importWords, listWordReports, resolveWordReport, recordSecurityEvent, listSecurityEvents, countOpenSecurityEvents } = require('./db/database');
 const { authCookie, createSessionToken, validatePassword, verifySessionToken, readSessionToken, requireAdmin } = require('./admin-auth');
+const { getClientIp } = require('./client-ip');
 
 const loginAttempts = new Map();
 function classifySuspiciousRequest(url) {
@@ -13,11 +14,11 @@ function classifySuspiciousRequest(url) {
 }
 function auditRequests(req, _res, next) {
   const classification = classifySuspiciousRequest(req.originalUrl);
-  if (classification) recordSecurityEvent({ event_type: classification[0], severity: classification[1], ip: req.ip, method: req.method, url: req.originalUrl });
+  if (classification) recordSecurityEvent({ event_type: classification[0], severity: classification[1], ip: getClientIp(req), method: req.method, url: req.originalUrl });
   next();
 }
 function loginRateLimit(req, res, next) {
-  const key = req.ip || 'unknown';
+  const key = getClientIp(req);
   const now = Date.now();
   const recent = (loginAttempts.get(key) || []).filter((time) => now - time < 15 * 60 * 1000);
   if (recent.length >= 10) {
@@ -58,7 +59,7 @@ app.get('/health', (_req, res) => {
 app.post('/api/auth/login', loginRateLimit, (req, res) => {
   const password = String(req.body?.password || '');
   if (!validatePassword(password)) {
-    const key = req.ip || 'unknown';
+    const key = getClientIp(req);
     loginAttempts.set(key, [...(req.loginAttempts || []), Date.now()]);
     recordSecurityEvent({ event_type: 'failed_admin_login', severity: 'warning', ip: key, method: req.method, url: req.originalUrl });
     return res.status(401).json({ error: 'invalid_password' });

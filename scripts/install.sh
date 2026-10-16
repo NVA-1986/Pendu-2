@@ -14,6 +14,7 @@ ADMIN_HOST="${ADMIN_HOST:-127.0.0.1}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-admin}"
 WORDS_DATA_DIR="${WORDS_DATA_DIR:-/var/lib/henker-spiel}"
 WORDS_DATA_FILE="${WORDS_DATA_FILE:-$WORDS_DATA_DIR/words.json}"
+TRUST_PROXY_HEADERS="${TRUST_PROXY_HEADERS:-false}"
 
 if [[ ${EUID:-$(id -u)} -ne 0 ]]; then
   echo "Ce script doit être exécuté en root." >&2
@@ -103,6 +104,7 @@ Environment=NODE_ENV=production
 Environment=PORT=$PUBLIC_PORT
 Environment=HOST=$PUBLIC_HOST
 Environment=WORDS_PATH=$WORDS_DATA_FILE
+Environment=TRUST_PROXY_HEADERS=$TRUST_PROXY_HEADERS
 ExecStart=$NPM_BIN run start:public
 Restart=always
 RestartSec=5
@@ -128,6 +130,7 @@ Environment=NODE_ENV=production
 Environment=PORT=$ADMIN_PORT
 Environment=HOST=$ADMIN_HOST
 Environment=WORDS_PATH=$WORDS_DATA_FILE
+Environment=TRUST_PROXY_HEADERS=$TRUST_PROXY_HEADERS
 EnvironmentFile=$ADMIN_SECRET_FILE
 ExecStart=$NPM_BIN run start:admin
 Restart=always
