@@ -98,8 +98,10 @@
         <div class="status-actions"><div id="status-text" class="status-text"></div><button id="new-game-btn" class="action-btn" type="button">Nouvelle partie</button></div>
         <button id="report-word-btn" class="link-btn" type="button">Signaler ce mot</button>
         <form id="report-form" class="report-form hidden">
+          <label for="report-message">Quel est le problème ?</label>
           <textarea id="report-message" maxlength="500" required placeholder="Erreur, question ou suggestion..."></textarea>
-          <button class="action-btn" type="submit">Préparer l'e-mail</button>
+          <button id="report-submit-btn" class="action-btn" type="submit">Envoyer le signalement</button>
+          <div id="report-feedback" class="report-feedback" role="status" aria-live="polite"></div>
         </form>
       </section>
 

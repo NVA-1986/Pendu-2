@@ -128,6 +128,10 @@ button {
 .link-btn { border: 0; background: none; color: var(--primary-text); text-decoration: underline; cursor: pointer; margin: 10px auto 0; display: block; }
 .report-form { display: grid; gap: 8px; margin-top: 8px; }
 .report-form textarea { min-height: 70px; resize: vertical; border: 1px solid var(--border); border-radius: 8px; padding: 8px; background: var(--bg); color: var(--text); }
+.report-form label { color: var(--muted); font-size: .85rem; }
+.report-feedback { min-height: 1.2em; text-align: center; font-size: .85rem; }
+.report-feedback.is-success { color: var(--success); }
+.report-feedback.is-error { color: var(--danger); }
 .action-btn {
   min-height: 48px;
   border: 1px solid #96c7a8;

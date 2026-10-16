@@ -30,7 +30,9 @@ const els = {
   playerName: document.getElementById('player-name'),
   reportBtn: document.getElementById('report-word-btn'),
   reportForm: document.getElementById('report-form'),
-  reportMessage: document.getElementById('report-message')
+  reportMessage: document.getElementById('report-message'),
+  reportSubmitBtn: document.getElementById('report-submit-btn'),
+  reportFeedback: document.getElementById('report-feedback')
 };
 
 const state = {
@@ -408,14 +410,25 @@ async function init() {
   els.reportForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const message = els.reportMessage.value.trim();
+    if (!message || !state.currentWord || els.reportSubmitBtn.disabled) return;
+    els.reportSubmitBtn.disabled = true;
+    els.reportSubmitBtn.textContent = 'Envoi...';
+    els.reportFeedback.textContent = '';
     try {
-      await fetch('/api/reports', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
-        word_id: state.currentWord?.id, word: state.currentWord?.word, player_id: state.playerId, message
+      const response = await fetch('/api/reports', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+        word_id: state.currentWord.id, word: state.currentWord.word, player_id: state.playerId, message
       }) });
-    } catch (_error) {}
-    const subject = encodeURIComponent(`Signalement mot - ${state.currentWord?.word || ''}`);
-    const body = encodeURIComponent(`Joueur: ${els.playerName.value}\nMot: ${state.currentWord?.word || ''}\n\n${message}`);
-    window.location.href = `mailto:info@418.ch?subject=${subject}&body=${body}`;
+      if (!response.ok) throw new Error('report_failed');
+      els.reportMessage.value = '';
+      els.reportFeedback.textContent = 'Merci, votre signalement a bien été envoyé.';
+      els.reportFeedback.className = 'report-feedback is-success';
+    } catch (_error) {
+      els.reportFeedback.textContent = 'Impossible d’envoyer le signalement. Réessayez plus tard.';
+      els.reportFeedback.className = 'report-feedback is-error';
+    } finally {
+      els.reportSubmitBtn.disabled = false;
+      els.reportSubmitBtn.textContent = 'Envoyer le signalement';
+    }
   });
   renderKeyboard(els.keyboard, handleGuess);
   renderDirectionLabel();
