@@ -1,10 +1,10 @@
 const express = require('express');
-const { recordGameSession, upsertPlayer, normalizeDirection, normalizeResult } = require('../db/database');
+const { recordGameSession, upsertPlayer, getWordById, normalizeDirection, normalizeResult } = require('../db/database');
 
 const router = express.Router();
 
-function isNonEmptyString(value) {
-  return typeof value === 'string' && value.trim().length > 0;
+function isNonEmptyString(value, max = 120) {
+  return typeof value === 'string' && value.trim().length > 0 && value.trim().length <= max;
 }
 
 function isArrayOfStrings(value) {
@@ -14,15 +14,15 @@ function isArrayOfStrings(value) {
 function validateStatsBody(body) {
   const errors = [];
 
-  if (!isNonEmptyString(body.session_id)) errors.push('session_id');
-  if (!isNonEmptyString(body.player_id)) errors.push('player_id');
-  if (!isNonEmptyString(body.word_id)) errors.push('word_id');
-  if (!isNonEmptyString(body.word)) errors.push('word');
+  if (!/^[a-zA-Z0-9_-]{8,80}$/.test(String(body.session_id || ''))) errors.push('session_id');
+  if (!/^[a-zA-Z0-9_-]{8,80}$/.test(String(body.player_id || ''))) errors.push('player_id');
+  if (!/^[a-zA-Z0-9_-]{1,80}$/.test(String(body.word_id || ''))) errors.push('word_id');
+  if (!isNonEmptyString(body.word, 200)) errors.push('word');
   if (!normalizeResult(body.result)) errors.push('result');
   if (body.direction !== 'FR_TO_DE' && body.direction !== 'DE_TO_FR') errors.push('direction');
-  if (!Number.isInteger(body.errors) || body.errors < 0) errors.push('errors');
-  if (!isArrayOfStrings(body.letters_tried)) errors.push('letters_tried');
-  if (!Number.isInteger(body.duration_seconds) || body.duration_seconds < 0) errors.push('duration_seconds');
+  if (!Number.isInteger(body.errors) || body.errors < 0 || body.errors > 7) errors.push('errors');
+  if (!isArrayOfStrings(body.letters_tried) || body.letters_tried.length > 100 || body.letters_tried.some((x) => x.length > 4)) errors.push('letters_tried');
+  if (!Number.isInteger(body.duration_seconds) || body.duration_seconds < 0 || body.duration_seconds > 86400) errors.push('duration_seconds');
 
   return errors;
 }
@@ -30,8 +30,8 @@ function validateStatsBody(body) {
 router.post('/player', (req, res) => {
   const { player_id } = req.body || {};
 
-  if (!isNonEmptyString(player_id)) {
-    return res.status(400).json({ error: 'player_id is required' });
+  if (!/^[a-zA-Z0-9_-]{8,80}$/.test(String(player_id || ''))) {
+    return res.status(400).json({ error: 'invalid_player_id' });
   }
 
   const player = upsertPlayer(player_id.trim());
@@ -50,6 +50,11 @@ router.post('/stats', (req, res) => {
   }
 
   try {
+    const knownWord = getWordById(body.word_id.trim());
+    const expectedAnswer = body.direction === 'FR_TO_DE' ? knownWord?.word : knownWord?.translation;
+    if (!knownWord || expectedAnswer !== body.word.trim()) {
+      return res.status(400).json({ error: 'word_mismatch' });
+    }
     const result = recordGameSession({
       session_id: body.session_id.trim(),
       player_id: body.player_id.trim(),

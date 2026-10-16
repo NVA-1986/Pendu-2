@@ -4,6 +4,7 @@ const state = {
   sessions: [],
   wordStats: [],
   summary: null,
+  players: [], activity: [], securityEvents: [],
   activeTab: 'stats',
   sorts: {
     sessions: { key: 'played_at', dir: 'desc' },
@@ -20,6 +21,9 @@ const els = {
   loginError: document.getElementById('login-error'),
   logoutBtn: document.getElementById('logout-btn'),
   summaryKpis: document.getElementById('summary-kpis'),
+  playersTable: document.getElementById('players-table'),
+  activityChart: document.getElementById('activity-chart'),
+  securityEvents: document.getElementById('security-events'),
   sessionsTable: document.getElementById('sessions-table'),
   wordStatsTable: document.getElementById('word-stats-table'),
   wordsTable: document.getElementById('words-table'),
@@ -65,6 +69,9 @@ async function api(path, options = {}) {
 
 function formatValue(value) {
   return value === null || value === undefined || value === '' ? '—' : value;
+}
+function esc(value) {
+  return String(formatValue(value)).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
 function sortRows(rows, sortConfig) {
@@ -138,6 +145,15 @@ function renderKpis() {
     .join('');
 }
 
+function renderPlayers() {
+  els.playersTable.innerHTML = `<thead><tr><th>Identifiant</th><th>Parties</th><th>Victoires</th><th>Temps total</th><th>Dernière activité</th></tr></thead><tbody>${state.players.map((p) => `<tr><td>${esc(p.player_id)}</td><td>${p.sessions}</td><td>${p.wins}</td><td>${Math.round(p.total_duration / 60)} min</td><td>${esc(p.last_seen)}</td></tr>`).join('')}</tbody>`;
+}
+function renderActivity() {
+  const max = Math.max(1, ...state.activity.map((x) => Number(x.sessions)));
+  els.activityChart.innerHTML = state.activity.slice().reverse().map((x) => `<div class="activity-bar" title="${esc(x.day)} : ${x.sessions} parties"><span style="height:${Math.max(4, x.sessions / max * 100)}%"></span><small>${esc(x.day?.slice(5))}</small></div>`).join('') || '<span class="muted">Pas encore de données</span>';
+  els.securityEvents.textContent = state.securityEvents.length ? state.securityEvents.map((x) => `${x.time} — ${x.ip} — ${x.url}`).join('\n') : 'Aucune alerte détectée';
+}
+
 function renderSessions() {
   const rows = sortRows(state.sessions || [], state.sorts.sessions);
   els.sessionsTable.innerHTML = `
@@ -179,8 +195,8 @@ function renderWordStats() {
     <tbody>
       ${rows.map((row) => `
         <tr>
-          <td>${formatValue(row.word)}</td>
-          <td>${formatValue(row.translation)}</td>
+          <td>${esc(row.word)}</td>
+          <td>${esc(row.translation)}</td>
           <td>${row.play_count || 0}</td>
           <td>${row.win_count || 0}</td>
           <td>${row.complexity_label || 'moyen'}</td>
@@ -206,10 +222,10 @@ function renderWords() {
     <tbody>
       ${rows.map((row) => `
         <tr>
-          <td>${row.id}</td>
-          <td>${row.word}</td>
-          <td>${formatValue(row.translation)}</td>
-          <td>${formatValue(row.hint)}</td>
+          <td>${esc(row.id)}</td>
+          <td>${esc(row.word)}</td>
+          <td>${esc(row.translation)}</td>
+          <td>${esc(row.hint)}</td>
           <td>${row.enabled !== false ? 'Oui' : 'Non'}</td>
           <td>
             <div class="actions">
@@ -235,6 +251,8 @@ function renderWords() {
 }
 
 function renderAllTables() {
+  renderPlayers();
+  renderActivity();
   renderSessions();
   renderWordStats();
   renderWords();
@@ -255,14 +273,15 @@ function fillWordForm(word = null) {
 }
 
 async function loadData() {
-  const [summary, sessions, wordStats, words] = await Promise.all([
-    api('/api/stats/summary'),
-    api('/api/stats/sessions?limit=100'),
-    api('/api/stats/word-stats'),
-    api('/api/words')
+  const [summary, sessions, players, activity, securityEvents, wordStats, words] = await Promise.all([
+    api('/api/stats/summary'), api('/api/stats/sessions?limit=100'), api('/api/stats/players'),
+    api('/api/stats/activity'), api('/api/security/events'), api('/api/stats/word-stats'), api('/api/words')
   ]);
   state.summary = summary;
   state.sessions = sessions;
+  state.players = players;
+  state.activity = activity;
+  state.securityEvents = securityEvents;
   state.wordStats = wordStats;
   state.words = words;
   renderKpis();

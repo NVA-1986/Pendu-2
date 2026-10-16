@@ -47,7 +47,7 @@
       </header>
 
       <section class="controls" aria-label="Actions de jeu">
-        <button id="new-game-btn" class="action-btn" type="button">Nouvelle partie</button>
+        <div class="player-id"><label for="player-name">Joueur</label><input id="player-name" maxlength="32" autocomplete="nickname" /></div>
         <button id="direction-btn" class="action-btn action-btn--ghost" type="button">FR → DE-CH</button>
       </section>
 
@@ -95,7 +95,12 @@
       </section>
 
       <section class="status-card" aria-live="polite">
-        <div id="status-text" class="status-text"></div>
+        <div class="status-actions"><div id="status-text" class="status-text"></div><button id="new-game-btn" class="action-btn" type="button">Nouvelle partie</button></div>
+        <button id="report-word-btn" class="link-btn" type="button">Signaler ce mot</button>
+        <form id="report-form" class="report-form hidden">
+          <textarea id="report-message" maxlength="500" required placeholder="Erreur, question ou suggestion..."></textarea>
+          <button class="action-btn" type="submit">Préparer l'e-mail</button>
+        </form>
       </section>
 
       <section class="keyboard-card" aria-label="Clavier virtuel">

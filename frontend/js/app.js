@@ -12,6 +12,7 @@ import { queueAndSyncStat, startStatsSync } from './stats-sync.js';
 
 const MAX_ERRORS = 7;
 const PLAYER_ID_KEY = 'pendu-schwiiz-player-id';
+const PLAYER_NAME_KEY = 'pendu-schwiiz-player-name';
 const DIRECTION_KEY = 'pendu-schwiiz-direction';
 const ABANDON_KEY = 'pendu-schwiiz-pending-abandon';
 
@@ -25,7 +26,11 @@ const els = {
   statusText: document.getElementById('status-text'),
   keyboard: document.getElementById('keyboard'),
   themeBtn: document.getElementById('theme-btn'),
-  appVersion: document.getElementById('app-version')
+  appVersion: document.getElementById('app-version'),
+  playerName: document.getElementById('player-name'),
+  reportBtn: document.getElementById('report-word-btn'),
+  reportForm: document.getElementById('report-form'),
+  reportMessage: document.getElementById('report-message')
 };
 
 const state = {
@@ -62,9 +67,9 @@ function saveTheme(theme) {
 }
 
 function getOrCreatePlayerId() {
-  let playerId = localStorage.getItem(PLAYER_ID_KEY);
+  let playerId = localStorage.getItem(PLAYER_NAME_KEY) || localStorage.getItem(PLAYER_ID_KEY);
   if (!playerId) {
-    playerId = createUuid();
+    playerId = `Joueur-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
     localStorage.setItem(PLAYER_ID_KEY, playerId);
   }
   return playerId;
@@ -391,6 +396,21 @@ function registerPwa() {
 }
 
 async function init() {
+  els.playerName.value = localStorage.getItem(PLAYER_NAME_KEY) || state.playerId;
+  els.playerName.addEventListener('change', () => {
+    const name = els.playerName.value.trim().replace(/[^\p{L}\p{N} _-]/gu, '').slice(0, 32);
+    els.playerName.value = name || state.playerId;
+    state.playerId = els.playerName.value;
+    localStorage.setItem(PLAYER_NAME_KEY, els.playerName.value);
+    localStorage.setItem(PLAYER_ID_KEY, state.playerId);
+  });
+  els.reportBtn.addEventListener('click', () => els.reportForm.classList.toggle('hidden'));
+  els.reportForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const subject = encodeURIComponent(`Signalement mot - ${state.currentWord?.word || ''}`);
+    const body = encodeURIComponent(`Joueur: ${els.playerName.value}\nMot: ${state.currentWord?.word || ''}\n\n${els.reportMessage.value}`);
+    window.location.href = `mailto:info@418.ch?subject=${subject}&body=${body}`;
+  });
   renderKeyboard(els.keyboard, handleGuess);
   renderDirectionLabel();
   applyTheme(state.theme);

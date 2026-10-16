@@ -8,6 +8,13 @@ const statsRouter = require('./routes/stats');
 initDatabase();
 
 const app = express();
+app.disable('x-powered-by');
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
 const port = process.env.PORT || 4173;
 const host = process.env.HOST || '0.0.0.0';
 const frontendDir = path.join(__dirname, '..', 'frontend');

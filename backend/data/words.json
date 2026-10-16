@@ -1,1 +1,14 @@
-[]
+[
+  {"id":"word_001","word":"Apfel","translation":"Pomme","deutsch":"Öpfel","english":"apple","category":"alimentation","dialect":"suisse-allemand","hint":"Fruit"},
+  {"id":"word_002","word":"Brot","translation":"Pain","deutsch":"Brot","english":"bread","category":"alimentation","dialect":"suisse-allemand","hint":"Boulangerie"},
+  {"id":"word_003","word":"Haus","translation":"Maison","deutsch":"Huus","english":"house","category":"quotidien","dialect":"suisse-allemand","hint":"Logement"},
+  {"id":"word_004","word":"Kind","translation":"Enfant","deutsch":"Chind","english":"child","category":"famille","dialect":"suisse-allemand","hint":"Famille"},
+  {"id":"word_005","word":"Wasser","translation":"Eau","deutsch":"Wasser","english":"water","category":"nature","dialect":"suisse-allemand","hint":"Boisson"},
+  {"id":"word_006","word":"Berg","translation":"Montagne","deutsch":"Bärg","english":"mountain","category":"nature","dialect":"suisse-allemand","hint":"Paysage suisse"},
+  {"id":"word_007","word":"Schule","translation":"École","deutsch":"Schuel","english":"school","category":"éducation","dialect":"suisse-allemand","hint":"Apprentissage"},
+  {"id":"word_008","word":"Freund","translation":"Ami","deutsch":"Fründ","english":"friend","category":"relations","dialect":"suisse-allemand","hint":"Relation"},
+  {"id":"word_009","word":"Sonne","translation":"Soleil","deutsch":"Sunne","english":"sun","category":"nature","dialect":"suisse-allemand","hint":"Dans le ciel"},
+  {"id":"word_010","word":"Katze","translation":"Chat","deutsch":"Chatz","english":"cat","category":"animaux","dialect":"suisse-allemand","hint":"Animal"},
+  {"id":"word_011","word":"Zug","translation":"Train","deutsch":"Zug","english":"train","category":"transport","dialect":"suisse-allemand","hint":"Transport"},
+  {"id":"word_012","word":"Schnee","translation":"Neige","deutsch":"Schnee","english":"snow","category":"nature","dialect":"suisse-allemand","hint":"Hiver"}
+]

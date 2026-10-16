@@ -76,7 +76,8 @@ function safeParseWords(raw) {
 function normalizeWordRecord(word) {
   const id = String(word?.id || '').trim();
   const translation = String(word?.translation || '').trim();
-  const deutch = String(word?.deutch || '').trim();
+  // Keep the historical `deutch` field readable while accepting the corrected name.
+  const deutsch = String(word?.deutsch || word?.deutch || '').trim();
   const category = String(word?.category || '').trim();
   const dialect = String(word?.dialect || '').trim();
   const hint = String(word?.hint || '').trim();
@@ -86,19 +87,22 @@ function normalizeWordRecord(word) {
     throw new Error('word.id is required');
   }
 
-  const fallbackWord = translation || deutch || '[mot manquant]';
+  const english = String(word?.english || word?.en || '').trim();
+  const fallbackWord = translation || deutsch || english;
   const baseWord = String(word?.word || fallbackWord).trim();
   const length = Number.isInteger(word?.length) && word.length > 0 ? word.length : [...baseWord].length;
 
-  if (!word?.word || !String(word.word).trim()) {
-    console.warn(`[words] entrée sans mot pour ${id}, fallback appliqué`);
+  if (!baseWord || !translation) {
+    throw new Error(`word ${id} must contain word and translation`);
   }
 
   return {
     id,
     word: baseWord,
     translation,
-    deutch,
+    deutsch,
+    deutch: deutsch,
+    english,
     category,
     dialect,
     hint,
@@ -143,7 +147,8 @@ function upsertWord(input) {
     id: input.id || generateWordId(),
     word: input.word,
     translation: input.translation || '',
-    deutch: input.deutch || '',
+    deutsch: input.deutsch || input.deutch || '',
+    english: input.english || '',
     category: input.category || '',
     dialect: input.dialect || '',
     hint: input.hint || '',
@@ -345,6 +350,27 @@ function recordGameSession(session) {
   return insertTransaction(session);
 }
 
+function listPlayerStats() {
+  const database = getDb();
+  return database.prepare(`
+    SELECT p.id AS player_id, p.created_at, p.last_seen,
+      COUNT(g.id) AS sessions,
+      COALESCE(SUM(CASE WHEN g.result = 'won' THEN 1 ELSE 0 END), 0) AS wins,
+      COALESCE(SUM(CASE WHEN g.result = 'lost' THEN 1 ELSE 0 END), 0) AS losses,
+      COALESCE(SUM(g.duration_seconds), 0) AS total_duration,
+      COALESCE(SUM(g.errors), 0) AS total_errors
+    FROM players p LEFT JOIN game_sessions g ON g.player_id = p.id
+    GROUP BY p.id ORDER BY last_seen DESC
+  `).all();
+}
+
+function getActivityStats() {
+  const database = getDb();
+  return database.prepare(`SELECT substr(played_at, 1, 10) AS day, COUNT(*) AS sessions,
+    COUNT(DISTINCT player_id) AS players, COALESCE(SUM(duration_seconds), 0) AS duration
+    FROM game_sessions GROUP BY day ORDER BY day DESC LIMIT 30`).all();
+}
+
 function getStatsSummary() {
   const database = getDb();
   const sessions = database.prepare(`
@@ -440,6 +466,8 @@ module.exports = {
   normalizeResult,
   getStatsSummary,
   listSessions,
+  listPlayerStats,
+  getActivityStats,
   listWordStats,
   normalizeWordRecord,
   generateWordId
