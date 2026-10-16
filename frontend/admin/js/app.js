@@ -76,6 +76,12 @@ async function api(path, options = {}) {
 function formatValue(value) {
   return value === null || value === undefined || value === '' ? '—' : value;
 }
+function formatDateTime(value) {
+  if (!value) return '—';
+  const raw = String(value);
+  const date = new Date(`${raw.replace(' ', 'T')}Z`);
+  return Number.isNaN(date.getTime()) ? raw : date.toLocaleString('fr-CH', { dateStyle: 'short', timeStyle: 'medium' });
+}
 function esc(value) {
   return String(formatValue(value)).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
@@ -159,13 +165,13 @@ function renderReports() {
   const open = state.reports.filter((r) => r.status === 'open');
   els.reportsBadge.textContent = open.length;
   els.reportsBadge.classList.toggle('hidden', open.length === 0);
-  els.reportsTable.innerHTML = `<thead><tr><th>Date</th><th>Mot</th><th>Joueur</th><th>Message</th><th>Statut</th><th>Action</th></tr></thead><tbody>${state.reports.map((r) => `<tr><td>${esc(r.created_at)}</td><td>${esc(r.word)}</td><td>${esc(r.player_id)}</td><td>${esc(r.message)}</td><td>${r.status === 'open' ? '<span class="report-open">À traiter</span>' : '<span class="report-done">Traité</span>'}</td><td>${r.status === 'open' ? `<button class="btn btn--outline" data-resolve-report="${esc(r.id)}" type="button">Marquer traité</button>` : '—'}</td></tr>`).join('')}</tbody>`;
+  els.reportsTable.innerHTML = `<thead><tr><th>Date</th><th>Mot</th><th>Joueur</th><th>Message</th><th>Statut</th><th>Action</th></tr></thead><tbody>${state.reports.map((r) => `<tr><td>${formatDateTime(r.created_at)}</td><td>${esc(r.word)}</td><td>${esc(r.player_id)}</td><td>${esc(r.message)}</td><td>${r.status === 'open' ? '<span class="report-open">À traiter</span>' : '<span class="report-done">Traité</span>'}</td><td>${r.status === 'open' ? `<button class="btn btn--outline" data-resolve-report="${esc(r.id)}" type="button">Marquer traité</button>` : '—'}</td></tr>`).join('')}</tbody>`;
   els.reportsTable.querySelectorAll('[data-resolve-report]').forEach((button) => button.addEventListener('click', () => resolveReport(button.dataset.resolveReport)));
 }
 function renderActivity() {
   const max = Math.max(1, ...state.activity.map((x) => Number(x.sessions)));
   els.activityChart.innerHTML = state.activity.slice().reverse().map((x) => `<div class="activity-bar" title="${esc(x.day)} : ${x.sessions} parties"><span style="height:${Math.max(4, x.sessions / max * 100)}%"></span><small>${esc(x.day?.slice(5))}</small></div>`).join('') || '<span class="muted">Pas encore de données</span>';
-  const securityText = state.securityEvents.length ? state.securityEvents.map((x) => `${x.created_at} — ${x.severity} — ${x.event_type} — ${x.ip || 'inconnu'} — ${x.url || ''}`).join('\n') : 'Aucune alerte détectée';
+  const securityText = state.securityEvents.length ? state.securityEvents.map((x) => `${formatDateTime(x.created_at)} — ${x.severity} — ${x.event_type} — ${x.ip || 'inconnu'} — ${x.url || ''}`).join('\n') : 'Aucune alerte détectée';
   els.securityEvents.textContent = securityText;
   els.securityEventsFull.textContent = securityText;
   els.securityBadge.textContent = state.securityEvents.length;
