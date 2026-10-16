@@ -1,0 +1,12 @@
+[
+  {"id":"swiss_001","word":"Heilandsack","translation":"sacrebleu","deutsch":"Heilandsack","english":"darn","category":"Schimpfwörter","dialect":"CH-DE","hint":"Exclamation religieuse"},
+  {"id":"swiss_002","word":"Tammi","translation":"zut","deutsch":"Sakrament","english":"damn","category":"Schimpfwörter","dialect":"CH-DE","hint":"Irritation"},
+  {"id":"swiss_003","word":"Tamminomol","translation":"zut","deutsch":"Sakrament","english":"damn","category":"Schimpfwörter","dialect":"CH-DE","hint":"Irritation"},
+  {"id":"swiss_004","word":"Himmuherrgottsdonner","translation":"tonnerre","deutsch":"Himmuherrgottsdonner","english":"thunder","category":"Schimpfwörter","dialect":"CH-DE","hint":"Juron fleuri"},
+  {"id":"swiss_005","word":"Saperlot","translation":"saperlipopette","deutsch":"Saperlot","english":"goodness","category":"Schimpfwörter","dialect":"CH-DE","hint":"Exclamation atténuée"},
+  {"id":"swiss_006","word":"Huere","translation":"putain","deutsch":"Huere","english":"fucking","category":"Schimpfwörter","dialect":"CH-DE","hint":"Renforçateur"},
+  {"id":"swiss_007","word":"Siech","translation":"idiot","deutsch":"Siech","english":"idiot","category":"Schimpfwörter","dialect":"CH-DE","hint":"Insulte familière"},
+  {"id":"swiss_008","word":"Cheib","translation":"saligaud","deutsch":"Cheib","english":"scoundrel","category":"Schimpfwörter","dialect":"CH-DE","hint":"Insulte familière"},
+  {"id":"swiss_009","word":"Verdammi","translation":"maudit","deutsch":"Verdammt","english":"damned","category":"Schimpfwörter","dialect":"CH-DE","hint":"Variante de verdammt"},
+  {"id":"swiss_010","word":"Scheibe","translation":"merde","deutsch":"Scheiße","english":"shit","category":"Schimpfwörter","dialect":"CH-DE","hint":"Euphémisme"}
+]

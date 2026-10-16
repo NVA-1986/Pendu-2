@@ -69,7 +69,7 @@ function saveTheme(theme) {
 }
 
 function getOrCreatePlayerId() {
-  let playerId = localStorage.getItem(PLAYER_NAME_KEY) || localStorage.getItem(PLAYER_ID_KEY);
+  let playerId = localStorage.getItem(PLAYER_ID_KEY);
   if (!playerId) {
     playerId = `Joueur-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
     localStorage.setItem(PLAYER_ID_KEY, playerId);
@@ -285,6 +285,7 @@ function buildSessionPayload(result) {
   return {
     session_id: state.sessionId,
     player_id: state.playerId,
+    player_name: localStorage.getItem(PLAYER_NAME_KEY) || els.playerName?.value || state.playerId,
     word_id: state.currentWord?.id,
     word: state.currentWord?.answer,
     direction: state.direction,
@@ -404,9 +405,7 @@ async function init() {
   els.playerName.addEventListener('change', () => {
     const name = els.playerName.value.trim().replace(/[^\p{L}\p{N} _-]/gu, '').slice(0, 32);
     els.playerName.value = name || state.playerId;
-    state.playerId = els.playerName.value;
     localStorage.setItem(PLAYER_NAME_KEY, els.playerName.value);
-    localStorage.setItem(PLAYER_ID_KEY, state.playerId);
   });
   els.reportBtn.addEventListener('click', () => els.reportForm.classList.toggle('hidden'));
   els.reportForm.addEventListener('submit', async (event) => {

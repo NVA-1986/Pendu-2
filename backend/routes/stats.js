@@ -28,13 +28,13 @@ function validateStatsBody(body) {
 }
 
 router.post('/player', (req, res) => {
-  const { player_id } = req.body || {};
+  const { player_id, player_name } = req.body || {};
 
   if (!/^[a-zA-Z0-9_-]{8,80}$/.test(String(player_id || ''))) {
     return res.status(400).json({ error: 'invalid_player_id' });
   }
 
-  const player = upsertPlayer(player_id.trim());
+  const player = upsertPlayer(player_id.trim(), String(player_name || '').trim());
   return res.status(200).json({ ok: true, player });
 });
 
@@ -58,6 +58,7 @@ router.post('/stats', (req, res) => {
     const result = recordGameSession({
       session_id: body.session_id.trim(),
       player_id: body.player_id.trim(),
+      player_name: String(body.player_name || '').trim().slice(0, 32),
       word_id: body.word_id.trim(),
       word: body.word.trim(),
       direction: normalizeDirection(body.direction),

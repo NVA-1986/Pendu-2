@@ -148,7 +148,8 @@ function showApp() {
 function renderKpis() {
   const s = state.summary || {};
   const items = [
-    ['Joueurs', s.players],
+    ['Joueurs actifs', s.players],
+    ['Visiteurs', s.visitors || 0],
     ['Parties', s.sessions],
     ['Victoires', s.won],
     ['Défaites', s.lost],
@@ -164,7 +165,7 @@ function renderKpis() {
 
 function renderPlayers() {
   const rows = sortRows(state.players || [], state.sorts.players);
-  els.playersTable.innerHTML = `<thead><tr><th>${renderSortHeader('players', 'player_id', 'Identifiant')}</th><th>${renderSortHeader('players', 'sessions', 'Parties')}</th><th>${renderSortHeader('players', 'wins', 'Victoires')}</th><th>${renderSortHeader('players', 'total_duration', 'Temps total')}</th><th>${renderSortHeader('players', 'last_seen', 'Dernière activité')}</th></tr></thead><tbody>${rows.map((p) => `<tr><td>${esc(p.player_id)}</td><td>${p.sessions}</td><td>${p.wins}</td><td>${Math.round(p.total_duration / 60)} min</td><td>${esc(p.last_seen)}</td></tr>`).join('')}</tbody>`;
+  els.playersTable.innerHTML = `<thead><tr><th>${renderSortHeader('players', 'player_id', 'Identifiant')}</th><th>${renderSortHeader('players', 'sessions', 'Parties')}</th><th>${renderSortHeader('players', 'wins', 'Victoires')}</th><th>${renderSortHeader('players', 'total_duration', 'Temps total')}</th><th>${renderSortHeader('players', 'last_seen', 'Dernière activité')}</th></tr></thead><tbody>${rows.map((p) => `<tr><td>${esc(p.display_name || p.player_id)}</td><td>${p.sessions}</td><td>${p.wins}</td><td>${Math.round(p.total_duration / 60)} min</td><td>${esc(p.last_seen)}</td></tr>`).join('')}</tbody>`;
 }
 function renderReports() {
   const open = state.reports.filter((r) => r.status === 'open');

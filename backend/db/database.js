@@ -22,6 +22,7 @@ function initDatabase() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS players (
       id TEXT PRIMARY KEY,
+      display_name TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       last_seen DATETIME
     );
@@ -96,6 +97,7 @@ function initDatabase() {
   for (const column of [
     "country TEXT DEFAULT 'XX'", "bot_name TEXT", "is_bot INTEGER NOT NULL DEFAULT 0", "read_at DATETIME"
   ]) { try { db.exec(`ALTER TABLE security_events ADD COLUMN ${column}`); } catch (_error) { /* already migrated */ } }
+  try { db.exec("ALTER TABLE players ADD COLUMN display_name TEXT"); } catch (_error) { /* already migrated */ }
 
   return db;
 }
@@ -298,14 +300,16 @@ function computeComplexity(row) {
   return { score, label };
 }
 
-function upsertPlayer(playerId) {
+function upsertPlayer(playerId, displayName = '') {
   const database = getDb();
   const stmt = database.prepare(`
-    INSERT INTO players (id, last_seen)
-    VALUES (?, CURRENT_TIMESTAMP)
-    ON CONFLICT(id) DO UPDATE SET last_seen = CURRENT_TIMESTAMP
+    INSERT INTO players (id, display_name, last_seen)
+    VALUES (?, ?, CURRENT_TIMESTAMP)
+    ON CONFLICT(id) DO UPDATE SET
+      display_name = CASE WHEN excluded.display_name <> '' THEN excluded.display_name ELSE players.display_name END,
+      last_seen = CURRENT_TIMESTAMP
   `);
-  stmt.run(playerId);
+  stmt.run(playerId, String(displayName || '').trim().slice(0, 32));
   return database.prepare('SELECT * FROM players WHERE id = ?').get(playerId);
 }
 
@@ -319,7 +323,7 @@ function recordGameSession(session) {
   }
 
   const insertTransaction = database.transaction((payload) => {
-    upsertPlayer(payload.player_id);
+    upsertPlayer(payload.player_id, payload.player_name);
 
     const existing = database.prepare('SELECT id FROM game_sessions WHERE id = ?').get(payload.session_id);
     if (existing) {
@@ -467,14 +471,14 @@ function resolveWordReport(id, status = 'resolved') {
 function listPlayerStats() {
   const database = getDb();
   return database.prepare(`
-    SELECT p.id AS player_id, p.created_at, p.last_seen,
+    SELECT p.id AS player_id, p.display_name, p.created_at, p.last_seen,
       COUNT(g.id) AS sessions,
       COALESCE(SUM(CASE WHEN g.result = 'won' THEN 1 ELSE 0 END), 0) AS wins,
       COALESCE(SUM(CASE WHEN g.result = 'lost' THEN 1 ELSE 0 END), 0) AS losses,
       COALESCE(SUM(g.duration_seconds), 0) AS total_duration,
       COALESCE(SUM(g.errors), 0) AS total_errors
     FROM players p LEFT JOIN game_sessions g ON g.player_id = p.id
-    GROUP BY p.id ORDER BY last_seen DESC
+    GROUP BY p.id HAVING COUNT(g.id) > 0 ORDER BY last_seen DESC
   `).all();
 }
 
@@ -499,10 +503,12 @@ function getStatsSummary() {
   `).get();
 
   const players = database.prepare('SELECT COUNT(*) AS count FROM players').get();
+  const activePlayers = database.prepare('SELECT COUNT(DISTINCT player_id) AS count FROM game_sessions').get();
   const words = loadWords(true);
 
   return {
-    players: Number(players?.count || 0),
+    players: Number(activePlayers?.count || 0),
+    visitors: Math.max(0, Number(players?.count || 0) - Number(activePlayers?.count || 0)),
     sessions: Number(sessions?.sessions || 0),
     won: Number(sessions?.won || 0),
     lost: Number(sessions?.lost || 0),
