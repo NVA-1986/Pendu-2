@@ -32,6 +32,7 @@ const els = {
   wordInput: document.getElementById('word-input'),
   translationInput: document.getElementById('translation-input'),
   deutchInput: document.getElementById('deutch-input'),
+  englishInput: document.getElementById('english-input'),
   hintInput: document.getElementById('hint-input'),
   categoryInput: document.getElementById('category-input'),
   dialectInput: document.getElementById('dialect-input'),
@@ -265,6 +266,7 @@ function fillWordForm(word = null) {
   els.wordInput.value = word?.word || '';
   els.translationInput.value = word?.translation || '';
   els.deutchInput.value = word?.deutch || '';
+  els.englishInput.value = word?.english || '';
   els.hintInput.value = word?.hint || '';
   els.categoryInput.value = word?.category || '';
   els.dialectInput.value = word?.dialect || '';
@@ -346,6 +348,8 @@ async function handleWordSubmit(event) {
     word: els.wordInput.value.trim(),
     translation: els.translationInput.value.trim(),
     deutch: els.deutchInput.value.trim(),
+    deutsch: els.deutchInput.value.trim(),
+    english: els.englishInput.value.trim(),
     hint: els.hintInput.value.trim(),
     category: els.categoryInput.value.trim(),
     dialect: els.dialectInput.value.trim(),

@@ -1,98 +1,63 @@
 <!doctype html>
 <html lang="fr">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex,nofollow" />
-    <title>Admin Pendu Schwiiz</title>
-    <link rel="stylesheet" href="/css/style.css" />
-  </head>
-  <body>
-    <main class="admin-shell">
-      <section id="login-view" class="panel">
-        <h1>Admin Pendu Schwiiz</h1>
-        <form id="login-form" class="stack">
-          <label>
-            Mot de passe
-            <input id="password-input" type="password" autocomplete="current-password" required />
-          </label>
-          <button class="btn" type="submit">Se connecter</button>
-          <p id="login-error" class="error" hidden></p>
-        </form>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Pendu Schwiiz · Administration</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <section id="login-view" class="login-page">
+    <div class="login-card">
+      <div class="brand brand--center"><span class="brand-mark">P</span><span>Pendu <strong>Schwiiz</strong></span></div>
+      <div class="login-heading"><h1>Bienvenue</h1><p>Connectez-vous à votre espace d’administration.</p></div>
+      <form id="login-form" class="stack">
+        <label>Mot de passe<input id="password-input" class="form-control" type="password" autocomplete="current-password" required /></label>
+        <button class="btn btn--primary btn--wide" type="submit">Se connecter</button>
+        <p id="login-error" class="error" hidden></p>
+      </form>
+    </div>
+  </section>
+
+  <div id="app-view" class="admin-layout hidden">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">P</span><span>Pendu <strong>Schwiiz</strong></span></div>
+      <div class="sidebar-caption">ADMINISTRATION</div>
+      <nav class="sidebar-nav">
+        <button class="tab is-active nav-item" data-tab="stats" type="button"><span class="nav-icon">⌂</span>Vue d'ensemble</button>
+        <button class="tab nav-item" data-tab="dictionary" type="button"><span class="nav-icon">☷</span>Dictionnaire</button>
+      </nav>
+      <div class="sidebar-footer"><span class="status-dot"></span> Services opérationnels<br><small>Jeu de pendu · v2</small></div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="topbar">
+        <div><div class="eyebrow">TABLEAU DE BORD</div><h1>Vue d'ensemble</h1></div>
+        <div class="topbar-actions"><span class="live-badge"><span class="status-dot"></span> En ligne</span><button id="logout-btn" class="btn btn--outline" type="button">Déconnexion</button></div>
+      </header>
+
+      <section id="tab-stats" class="tab-panel">
+        <div class="welcome-line"><div><h2>Bonjour, administrateur 👋</h2><p class="muted">Voici les indicateurs de votre jeu aujourd'hui.</p></div><button class="btn btn--primary" type="button" onclick="location.reload()">Actualiser les données</button></div>
+        <div class="kpis" id="summary-kpis"></div>
+        <div class="dashboard-grid">
+          <div class="card card--wide"><div class="card-header"><div><h2>Activité du jeu</h2><p class="muted">Parties et joueurs sur les 30 derniers jours</p></div><span class="card-badge">30 jours</span></div><div id="activity-chart" class="activity-chart"></div></div>
+          <div class="card"><div class="card-header"><div><h2>Joueurs</h2><p class="muted">Suivi des identifiants joueurs</p></div><span class="card-icon">♙</span></div><div class="table-wrap"><table id="players-table" class="table"></table></div></div>
+          <div class="card card--wide"><div class="card-header"><div><h2>Parties récentes</h2><p class="muted">Dernières parties enregistrées</p></div></div><div class="table-wrap"><table id="sessions-table" class="table"></table></div></div>
+          <div class="card"><div class="card-header"><div><h2>Alertes sécurité</h2><p class="muted">Requêtes suspectes détectées</p></div><span class="card-icon card-icon--red">!</span></div><div id="security-events" class="security-events">Aucune alerte</div></div>
+          <div class="card card--wide"><div class="card-header"><div><h2>Performance des mots</h2><p class="muted">Difficulté calculée selon les parties</p></div></div><div class="table-wrap"><table id="word-stats-table" class="table"></table></div></div>
+        </div>
       </section>
 
-      <section id="app-view" class="hidden">
-        <header class="admin-header panel">
-          <div>
-            <h1>Administration</h1>
-            <p class="muted">Stats & dictionnaire</p>
-          </div>
-          <button id="logout-btn" class="btn btn--ghost" type="button">Déconnexion</button>
-        </header>
-
-        <nav class="tabs panel">
-          <button class="tab is-active" data-tab="stats" type="button">Stats</button>
-          <button class="tab" data-tab="dictionary" type="button">Dictionnaire</button>
-        </nav>
-
-        <section id="tab-stats" class="panel tab-panel">
-          <div class="kpis" id="summary-kpis"></div>
-          <div class="admin-chart"><h2>Activité récente</h2><div id="activity-chart" class="activity-chart"></div></div>
-          <div class="grid-2">
-            <div>
-              <h2>Parties récentes</h2>
-              <div class="table-wrap"><table id="sessions-table" class="table"></table></div>
-            </div>
-            <div>
-              <h2>Joueurs</h2>
-              <div class="table-wrap"><table id="players-table" class="table"></table></div>
-              <h2>Stats des mots</h2>
-              <div class="table-wrap"><table id="word-stats-table" class="table"></table></div>
-              <h2>Alertes sécurité</h2><div id="security-events" class="security-events">Aucune alerte</div>
-            </div>
-          </div>
-        </section>
-
-        <section id="tab-dictionary" class="panel tab-panel hidden">
-          <div class="grid-2">
-            <div>
-              <h2>Ajouter / modifier un mot</h2>
-              <form id="word-form" class="stack">
-                <input type="hidden" id="word-id" />
-                <label>Mot<input id="word-input" required /></label>
-                <label>Traduction FR<input id="translation-input" /></label>
-                <label>Allemand / dialecte<input id="deutch-input" /></label>
-                <label>Hint région<input id="hint-input" /></label>
-                <label>Catégorie<input id="category-input" /></label>
-                <label>Dialecte<input id="dialect-input" /></label>
-                <label>Longueur<input id="length-input" type="number" min="1" /></label>
-                <label class="checkbox-row"><input id="enabled-input" type="checkbox" checked /> Mot actif</label>
-                <div class="row">
-                  <button class="btn" type="submit">Enregistrer</button>
-                  <button id="word-reset" class="btn btn--ghost" type="button">Nouveau</button>
-                </div>
-              </form>
-            </div>
-            <div>
-              <h2>Dictionnaire</h2>
-              <form id="import-form" class="stack" style="margin-bottom:10px;">
-                <label>Importer JSON
-                  <input id="import-file" type="file" accept="application/json,.json" required />
-                </label>
-                <label class="checkbox-row"><input id="import-replace" type="checkbox" /> Remplacer tout le dictionnaire</label>
-                <button class="btn btn--ghost" type="submit">Importer</button>
-              </form>
-              <div class="row" style="margin-bottom:10px;">
-                <button id="export-btn" class="btn btn--ghost" type="button">Exporter JSON</button>
-                <button id="enable-all-btn" class="btn btn--ghost" type="button">Tout activer</button>
-                <button id="disable-all-btn" class="btn btn--ghost" type="button">Tout désactiver</button>
-              </div>
-              <div class="table-wrap"><table id="words-table" class="table"></table></div>
-            </div>
-          </div>
-        </section>
+      <section id="tab-dictionary" class="tab-panel hidden">
+        <div class="welcome-line"><div><h2>Dictionnaire</h2><p class="muted">Gérez les mots disponibles dans les différentes langues.</p></div><div class="row"><button id="export-btn" class="btn btn--outline" type="button">Exporter</button></div></div>
+        <div class="dictionary-grid">
+          <div class="card"><div class="card-header"><h2>Ajouter / modifier un mot</h2></div><form id="word-form" class="stack"><input type="hidden" id="word-id" /><label>Mot<input id="word-input" class="form-control" required /></label><label>Traduction française<input id="translation-input" class="form-control" /></label><label>Allemand / suisse-allemand<input id="deutch-input" class="form-control" /></label><label>Anglais<input id="english-input" class="form-control" /></label><label>Indice<input id="hint-input" class="form-control" /></label><div class="form-columns"><label>Catégorie<input id="category-input" class="form-control" /></label><label>Dialecte<input id="dialect-input" class="form-control" /></label></div><label>Longueur<input id="length-input" class="form-control" type="number" min="1" /></label><label class="checkbox-row"><input id="enabled-input" type="checkbox" checked /> Mot actif</label><div class="row"><button class="btn btn--primary" type="submit">Enregistrer</button><button id="word-reset" class="btn btn--outline" type="button">Nouveau</button></div></form></div>
+          <div class="card"><div class="card-header"><div><h2>Tous les mots</h2><p class="muted">Importez ou activez votre corpus.</p></div></div><form id="import-form" class="import-box"><label>Importer un fichier JSON<input id="import-file" type="file" accept="application/json,.json" required /></label><label class="checkbox-row"><input id="import-replace" type="checkbox" /> Remplacer tout le dictionnaire</label><button class="btn btn--outline" type="submit">Importer</button></form><div class="row dictionary-actions"><button id="enable-all-btn" class="btn btn--outline" type="button">Tout activer</button><button id="disable-all-btn" class="btn btn--outline" type="button">Tout désactiver</button></div><div class="table-wrap"><table id="words-table" class="table"></table></div></div>
+        </div>
       </section>
     </main>
-    <script type="module" src="/js/app.js"></script>
-  </body>
+  </div>
+  <script type="module" src="/js/app.js"></script>
+</body>
 </html>
