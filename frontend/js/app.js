@@ -405,10 +405,16 @@ async function init() {
     localStorage.setItem(PLAYER_ID_KEY, state.playerId);
   });
   els.reportBtn.addEventListener('click', () => els.reportForm.classList.toggle('hidden'));
-  els.reportForm.addEventListener('submit', (event) => {
+  els.reportForm.addEventListener('submit', async (event) => {
     event.preventDefault();
+    const message = els.reportMessage.value.trim();
+    try {
+      await fetch('/api/reports', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+        word_id: state.currentWord?.id, word: state.currentWord?.word, player_id: state.playerId, message
+      }) });
+    } catch (_error) {}
     const subject = encodeURIComponent(`Signalement mot - ${state.currentWord?.word || ''}`);
-    const body = encodeURIComponent(`Joueur: ${els.playerName.value}\nMot: ${state.currentWord?.word || ''}\n\n${els.reportMessage.value}`);
+    const body = encodeURIComponent(`Joueur: ${els.playerName.value}\nMot: ${state.currentWord?.word || ''}\n\n${message}`);
     window.location.href = `mailto:info@418.ch?subject=${subject}&body=${body}`;
   });
   renderKeyboard(els.keyboard, handleGuess);

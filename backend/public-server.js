@@ -4,6 +4,7 @@ const packageJson = require('../package.json');
 const { initDatabase } = require('./db/database');
 const wordsRouter = require('./routes/words');
 const statsRouter = require('./routes/stats');
+const { createWordReport } = require('./db/database');
 
 initDatabase();
 
@@ -40,6 +41,20 @@ app.use('/data', express.static(dataDir, {
 }));
 app.use('/api/words', wordsRouter);
 app.use('/api', statsRouter);
+app.post('/api/reports', (req, res) => {
+  const word = String(req.body?.word || '').trim();
+  const message = String(req.body?.message || '').trim();
+  const wordId = String(req.body?.word_id || '').trim().slice(0, 80);
+  const playerId = String(req.body?.player_id || '').trim().slice(0, 80);
+  if (!word || word.length > 200 || !message || message.length > 500) {
+    return res.status(400).json({ error: 'invalid_report' });
+  }
+  try {
+    return res.status(201).json({ ok: true, report: createWordReport({ word, message, word_id: wordId, player_id: playerId }) });
+  } catch (error) {
+    return res.status(500).json({ error: 'failed_to_save_report', message: error.message });
+  }
+});
 app.use(express.static(frontendDir, {
   maxAge: 0,
   setHeaders: (res) => res.setHeader('Cache-Control', 'no-store')

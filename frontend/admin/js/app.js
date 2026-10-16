@@ -4,12 +4,13 @@ const state = {
   sessions: [],
   wordStats: [],
   summary: null,
-  players: [], activity: [], securityEvents: [],
+  players: [], activity: [], securityEvents: [], reports: [],
   activeTab: 'stats',
   sorts: {
     sessions: { key: 'played_at', dir: 'desc' },
     wordStats: { key: 'play_count', dir: 'desc' },
-    words: { key: 'word', dir: 'asc' }
+    words: { key: 'word', dir: 'asc' },
+    players: { key: 'last_seen', dir: 'desc' }
   }
 };
 
@@ -24,6 +25,10 @@ const els = {
   playersTable: document.getElementById('players-table'),
   activityChart: document.getElementById('activity-chart'),
   securityEvents: document.getElementById('security-events'),
+  securityEventsFull: document.getElementById('security-events-full'),
+  reportsTable: document.getElementById('reports-table'),
+  reportsBadge: document.getElementById('reports-badge'),
+  securityBadge: document.getElementById('security-badge'),
   sessionsTable: document.getElementById('sessions-table'),
   wordStatsTable: document.getElementById('word-stats-table'),
   wordsTable: document.getElementById('words-table'),
@@ -147,12 +152,24 @@ function renderKpis() {
 }
 
 function renderPlayers() {
-  els.playersTable.innerHTML = `<thead><tr><th>Identifiant</th><th>Parties</th><th>Victoires</th><th>Temps total</th><th>Dernière activité</th></tr></thead><tbody>${state.players.map((p) => `<tr><td>${esc(p.player_id)}</td><td>${p.sessions}</td><td>${p.wins}</td><td>${Math.round(p.total_duration / 60)} min</td><td>${esc(p.last_seen)}</td></tr>`).join('')}</tbody>`;
+  const rows = sortRows(state.players || [], state.sorts.players);
+  els.playersTable.innerHTML = `<thead><tr><th>${renderSortHeader('players', 'player_id', 'Identifiant')}</th><th>${renderSortHeader('players', 'sessions', 'Parties')}</th><th>${renderSortHeader('players', 'wins', 'Victoires')}</th><th>${renderSortHeader('players', 'total_duration', 'Temps total')}</th><th>${renderSortHeader('players', 'last_seen', 'Dernière activité')}</th></tr></thead><tbody>${rows.map((p) => `<tr><td>${esc(p.player_id)}</td><td>${p.sessions}</td><td>${p.wins}</td><td>${Math.round(p.total_duration / 60)} min</td><td>${esc(p.last_seen)}</td></tr>`).join('')}</tbody>`;
+}
+function renderReports() {
+  const open = state.reports.filter((r) => r.status === 'open');
+  els.reportsBadge.textContent = open.length;
+  els.reportsBadge.classList.toggle('hidden', open.length === 0);
+  els.reportsTable.innerHTML = `<thead><tr><th>Date</th><th>Mot</th><th>Joueur</th><th>Message</th><th>Statut</th><th>Action</th></tr></thead><tbody>${state.reports.map((r) => `<tr><td>${esc(r.created_at)}</td><td>${esc(r.word)}</td><td>${esc(r.player_id)}</td><td>${esc(r.message)}</td><td>${r.status === 'open' ? '<span class="report-open">À traiter</span>' : '<span class="report-done">Traité</span>'}</td><td>${r.status === 'open' ? `<button class="btn btn--outline" data-resolve-report="${esc(r.id)}" type="button">Marquer traité</button>` : '—'}</td></tr>`).join('')}</tbody>`;
+  els.reportsTable.querySelectorAll('[data-resolve-report]').forEach((button) => button.addEventListener('click', () => resolveReport(button.dataset.resolveReport)));
 }
 function renderActivity() {
   const max = Math.max(1, ...state.activity.map((x) => Number(x.sessions)));
   els.activityChart.innerHTML = state.activity.slice().reverse().map((x) => `<div class="activity-bar" title="${esc(x.day)} : ${x.sessions} parties"><span style="height:${Math.max(4, x.sessions / max * 100)}%"></span><small>${esc(x.day?.slice(5))}</small></div>`).join('') || '<span class="muted">Pas encore de données</span>';
-  els.securityEvents.textContent = state.securityEvents.length ? state.securityEvents.map((x) => `${x.time} — ${x.ip} — ${x.url}`).join('\n') : 'Aucune alerte détectée';
+  const securityText = state.securityEvents.length ? state.securityEvents.map((x) => `${x.time} — ${x.ip} — ${x.url}`).join('\n') : 'Aucune alerte détectée';
+  els.securityEvents.textContent = securityText;
+  els.securityEventsFull.textContent = securityText;
+  els.securityBadge.textContent = state.securityEvents.length;
+  els.securityBadge.classList.toggle('hidden', state.securityEvents.length === 0);
 }
 
 function renderSessions() {
@@ -254,6 +271,7 @@ function renderWords() {
 function renderAllTables() {
   renderPlayers();
   renderActivity();
+  renderReports();
   renderSessions();
   renderWordStats();
   renderWords();
@@ -275,19 +293,25 @@ function fillWordForm(word = null) {
 }
 
 async function loadData() {
-  const [summary, sessions, players, activity, securityEvents, wordStats, words] = await Promise.all([
+  const [summary, sessions, players, activity, securityEvents, reports, wordStats, words] = await Promise.all([
     api('/api/stats/summary'), api('/api/stats/sessions?limit=100'), api('/api/stats/players'),
-    api('/api/stats/activity'), api('/api/security/events'), api('/api/stats/word-stats'), api('/api/words')
+    api('/api/stats/activity'), api('/api/security/events'), api('/api/reports'), api('/api/stats/word-stats'), api('/api/words')
   ]);
   state.summary = summary;
   state.sessions = sessions;
   state.players = players;
   state.activity = activity;
   state.securityEvents = securityEvents;
+  state.reports = reports;
   state.wordStats = wordStats;
   state.words = words;
   renderKpis();
   renderAllTables();
+}
+
+async function resolveReport(id) {
+  await api(`/api/reports/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify({ status: 'resolved' }) });
+  await loadData();
 }
 
 async function deleteWord(id) {
@@ -317,8 +341,7 @@ async function setAllWordsEnabled(enabled) {
 function setTab(tab) {
   state.activeTab = tab;
   document.querySelectorAll('.tab').forEach((btn) => btn.classList.toggle('is-active', btn.dataset.tab === tab));
-  document.getElementById('tab-stats').classList.toggle('hidden', tab !== 'stats');
-  document.getElementById('tab-dictionary').classList.toggle('hidden', tab !== 'dictionary');
+  ['stats', 'dictionary', 'reports', 'security'].forEach((name) => document.getElementById(`tab-${name}`).classList.toggle('hidden', tab !== name));
 }
 
 async function handleLogin(event) {

@@ -27,6 +27,8 @@
       <nav class="sidebar-nav">
         <button class="tab is-active nav-item" data-tab="stats" type="button"><span class="nav-icon">⌂</span>Vue d'ensemble</button>
         <button class="tab nav-item" data-tab="dictionary" type="button"><span class="nav-icon">☷</span>Dictionnaire</button>
+        <button class="tab nav-item" data-tab="reports" type="button"><span class="nav-icon">⚑</span> Mots signalés <span id="reports-badge" class="notification-badge hidden">0</span></button>
+        <button class="tab nav-item" data-tab="security" type="button"><span class="nav-icon">⚠</span> Alertes sécurité <span id="security-badge" class="notification-badge hidden">0</span></button>
       </nav>
       <div class="sidebar-footer"><span class="status-dot"></span> Services opérationnels<br><small>Jeu de pendu · v2</small></div>
     </aside>
@@ -47,6 +49,15 @@
           <div class="card"><div class="card-header"><div><h2>Alertes sécurité</h2><p class="muted">Requêtes suspectes détectées</p></div><span class="card-icon card-icon--red">!</span></div><div id="security-events" class="security-events">Aucune alerte</div></div>
           <div class="card card--wide"><div class="card-header"><div><h2>Performance des mots</h2><p class="muted">Difficulté calculée selon les parties</p></div></div><div class="table-wrap"><table id="word-stats-table" class="table"></table></div></div>
         </div>
+      </section>
+
+      <section id="tab-reports" class="tab-panel hidden">
+        <div class="welcome-line"><div><h2>Mots signalés</h2><p class="muted">Questions et erreurs envoyées par les joueurs.</p></div></div>
+        <div class="card"><div class="table-wrap"><table id="reports-table" class="table"></table></div></div>
+      </section>
+      <section id="tab-security" class="tab-panel hidden">
+        <div class="welcome-line"><div><h2>Alertes sécurité</h2><p class="muted">Requêtes correspondant à des scans ou motifs suspects.</p></div></div>
+        <div class="card"><div id="security-events-full" class="security-events">Aucune alerte</div></div>
       </section>
 
       <section id="tab-dictionary" class="tab-panel hidden">

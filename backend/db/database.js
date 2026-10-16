@@ -56,6 +56,18 @@ function initDatabase() {
 
     CREATE INDEX IF NOT EXISTS idx_game_sessions_player_id ON game_sessions(player_id);
     CREATE INDEX IF NOT EXISTS idx_game_sessions_word_id ON game_sessions(word_id);
+
+    CREATE TABLE IF NOT EXISTS word_reports (
+      id TEXT PRIMARY KEY,
+      word_id TEXT,
+      word TEXT NOT NULL,
+      player_id TEXT,
+      message TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'open',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      resolved_at DATETIME
+    );
+    CREATE INDEX IF NOT EXISTS idx_word_reports_status ON word_reports(status);
   `);
 
   return db;
@@ -350,6 +362,25 @@ function recordGameSession(session) {
   return insertTransaction(session);
 }
 
+function createWordReport(report) {
+  const database = getDb();
+  const id = `report_${crypto.randomUUID()}`;
+  database.prepare(`INSERT INTO word_reports (id, word_id, word, player_id, message) VALUES (?, ?, ?, ?, ?)`).run(
+    id, report.word_id || '', report.word, report.player_id || '', report.message
+  );
+  return database.prepare('SELECT * FROM word_reports WHERE id = ?').get(id);
+}
+
+function listWordReports() {
+  return getDb().prepare('SELECT * FROM word_reports ORDER BY created_at DESC LIMIT 500').all();
+}
+
+function resolveWordReport(id, status = 'resolved') {
+  const database = getDb();
+  const result = database.prepare('UPDATE word_reports SET status = ?, resolved_at = CURRENT_TIMESTAMP WHERE id = ?').run(status, id);
+  return result.changes > 0;
+}
+
 function listPlayerStats() {
   const database = getDb();
   return database.prepare(`
@@ -468,6 +499,9 @@ module.exports = {
   listSessions,
   listPlayerStats,
   getActivityStats,
+  createWordReport,
+  listWordReports,
+  resolveWordReport,
   listWordStats,
   normalizeWordRecord,
   generateWordId

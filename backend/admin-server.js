@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const { initDatabase, getStatsSummary, listSessions, listWordStats, listWords, upsertWord, deleteWord, getWordById, setAllWordsEnabled, importWords } = require('./db/database');
+const { initDatabase, getStatsSummary, listSessions, listWordStats, listWords, upsertWord, deleteWord, getWordById, setAllWordsEnabled, importWords, listWordReports, resolveWordReport } = require('./db/database');
 const { authCookie, createSessionToken, validatePassword, verifySessionToken, readSessionToken, requireAdmin } = require('./admin-auth');
 
 const loginAttempts = new Map();
@@ -85,6 +85,12 @@ app.get('/api/stats/activity', requireAdmin, (_req, res) => {
 });
 
 app.get('/api/security/events', requireAdmin, (_req, res) => res.json(securityEvents));
+
+app.get('/api/reports', requireAdmin, (_req, res) => res.json(listWordReports()));
+app.put('/api/reports/:id', requireAdmin, (req, res) => {
+  const status = req.body?.status === 'open' ? 'open' : 'resolved';
+  return res.json({ ok: resolveWordReport(req.params.id, status), status });
+});
 
 app.get('/api/stats/sessions', requireAdmin, (req, res) => {
   const limit = Math.max(1, Math.min(500, Number(req.query.limit || 100)));
