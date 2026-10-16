@@ -68,6 +68,19 @@ function initDatabase() {
       resolved_at DATETIME
     );
     CREATE INDEX IF NOT EXISTS idx_word_reports_status ON word_reports(status);
+
+    CREATE TABLE IF NOT EXISTS security_events (
+      id TEXT PRIMARY KEY,
+      event_type TEXT NOT NULL,
+      severity TEXT NOT NULL DEFAULT 'warning',
+      ip TEXT,
+      method TEXT,
+      url TEXT,
+      details TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_security_events_created_at ON security_events(created_at);
+    CREATE INDEX IF NOT EXISTS idx_security_events_type ON security_events(event_type);
   `);
 
   return db;
@@ -362,6 +375,25 @@ function recordGameSession(session) {
   return insertTransaction(session);
 }
 
+function recordSecurityEvent(event) {
+  const database = getDb();
+  const id = `security_${crypto.randomUUID()}`;
+  database.prepare(`INSERT INTO security_events (id, event_type, severity, ip, method, url, details) VALUES (?, ?, ?, ?, ?, ?, ?)`).run(
+    id, event.event_type || 'suspicious_request', event.severity || 'warning',
+    String(event.ip || '').slice(0, 100), String(event.method || '').slice(0, 16),
+    String(event.url || '').slice(0, 2048), String(event.details || '').slice(0, 500)
+  );
+  return id;
+}
+
+function listSecurityEvents(limit = 500) {
+  return getDb().prepare('SELECT * FROM security_events ORDER BY created_at DESC LIMIT ?').all(Math.max(1, Math.min(1000, Number(limit) || 500)));
+}
+
+function countOpenSecurityEvents() {
+  return getDb().prepare(`SELECT COUNT(*) AS count FROM security_events WHERE created_at >= datetime('now', '-24 hours')`).get().count;
+}
+
 function createWordReport(report) {
   const database = getDb();
   const id = `report_${crypto.randomUUID()}`;
@@ -502,6 +534,9 @@ module.exports = {
   createWordReport,
   listWordReports,
   resolveWordReport,
+  recordSecurityEvent,
+  listSecurityEvents,
+  countOpenSecurityEvents,
   listWordStats,
   normalizeWordRecord,
   generateWordId

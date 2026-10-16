@@ -165,7 +165,7 @@ function renderReports() {
 function renderActivity() {
   const max = Math.max(1, ...state.activity.map((x) => Number(x.sessions)));
   els.activityChart.innerHTML = state.activity.slice().reverse().map((x) => `<div class="activity-bar" title="${esc(x.day)} : ${x.sessions} parties"><span style="height:${Math.max(4, x.sessions / max * 100)}%"></span><small>${esc(x.day?.slice(5))}</small></div>`).join('') || '<span class="muted">Pas encore de données</span>';
-  const securityText = state.securityEvents.length ? state.securityEvents.map((x) => `${x.time} — ${x.ip} — ${x.url}`).join('\n') : 'Aucune alerte détectée';
+  const securityText = state.securityEvents.length ? state.securityEvents.map((x) => `${x.created_at} — ${x.severity} — ${x.event_type} — ${x.ip || 'inconnu'} — ${x.url || ''}`).join('\n') : 'Aucune alerte détectée';
   els.securityEvents.textContent = securityText;
   els.securityEventsFull.textContent = securityText;
   els.securityBadge.textContent = state.securityEvents.length;

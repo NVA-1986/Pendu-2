@@ -1,21 +1,29 @@
 const express = require('express');
 const path = require('path');
-const { initDatabase, getStatsSummary, listSessions, listWordStats, listWords, upsertWord, deleteWord, getWordById, setAllWordsEnabled, importWords, listWordReports, resolveWordReport } = require('./db/database');
+const { initDatabase, getStatsSummary, listSessions, listWordStats, listWords, upsertWord, deleteWord, getWordById, setAllWordsEnabled, importWords, listWordReports, resolveWordReport, recordSecurityEvent, listSecurityEvents, countOpenSecurityEvents } = require('./db/database');
 const { authCookie, createSessionToken, validatePassword, verifySessionToken, readSessionToken, requireAdmin } = require('./admin-auth');
 
 const loginAttempts = new Map();
-const securityEvents = [];
+function classifySuspiciousRequest(url) {
+  if (/\.env|etc\/passwd|wp-admin|xmlrpc\.php/i.test(url)) return ['sensitive_path_scan', 'high'];
+  if (/<script|javascript:|onerror\s*=/i.test(url)) return ['xss_probe', 'high'];
+  if (/union\s+(all\s+)?select|sleep\s*\(|benchmark\s*\(/i.test(url)) return ['sql_injection_probe', 'high'];
+  if (/\.\.(\/|%2f|%5c)/i.test(url)) return ['path_traversal_probe', 'high'];
+  return null;
+}
 function auditRequests(req, _res, next) {
-  const suspicious = /\.\.|(union\s+select)|<script|wp-admin|\.env|etc\/passwd/i.test(req.originalUrl);
-  if (suspicious) securityEvents.unshift({ time: new Date().toISOString(), ip: req.ip, method: req.method, url: req.originalUrl, type: 'suspicious_request' });
-  if (securityEvents.length > 500) securityEvents.pop();
+  const classification = classifySuspiciousRequest(req.originalUrl);
+  if (classification) recordSecurityEvent({ event_type: classification[0], severity: classification[1], ip: req.ip, method: req.method, url: req.originalUrl });
   next();
 }
 function loginRateLimit(req, res, next) {
   const key = req.ip || 'unknown';
   const now = Date.now();
   const recent = (loginAttempts.get(key) || []).filter((time) => now - time < 15 * 60 * 1000);
-  if (recent.length >= 10) return res.status(429).json({ error: 'too_many_attempts' });
+  if (recent.length >= 10) {
+    recordSecurityEvent({ event_type: 'admin_bruteforce_rate_limit', severity: 'high', ip: key, method: req.method, url: req.originalUrl });
+    return res.status(429).json({ error: 'too_many_attempts' });
+  }
   req.loginAttempts = recent;
   next();
 }
@@ -52,6 +60,7 @@ app.post('/api/auth/login', loginRateLimit, (req, res) => {
   if (!validatePassword(password)) {
     const key = req.ip || 'unknown';
     loginAttempts.set(key, [...(req.loginAttempts || []), Date.now()]);
+    recordSecurityEvent({ event_type: 'failed_admin_login', severity: 'warning', ip: key, method: req.method, url: req.originalUrl });
     return res.status(401).json({ error: 'invalid_password' });
   }
 
@@ -84,7 +93,8 @@ app.get('/api/stats/activity', requireAdmin, (_req, res) => {
   return res.json(require('./db/database').getActivityStats());
 });
 
-app.get('/api/security/events', requireAdmin, (_req, res) => res.json(securityEvents));
+app.get('/api/security/events', requireAdmin, (_req, res) => res.json(listSecurityEvents()));
+app.get('/api/security/summary', requireAdmin, (_req, res) => res.json({ last24h: countOpenSecurityEvents() }));
 
 app.get('/api/reports', requireAdmin, (_req, res) => res.json(listWordReports()));
 app.put('/api/reports/:id', requireAdmin, (req, res) => {
