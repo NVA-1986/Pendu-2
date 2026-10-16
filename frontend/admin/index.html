@@ -56,10 +56,11 @@
         <div class="card"><div class="table-wrap"><table id="reports-table" class="table"></table></div></div>
       </section>
       <section id="tab-security" class="tab-panel hidden">
-        <div class="welcome-line"><div><h2>Alertes sécurité</h2><p class="muted">Requêtes correspondant à des scans ou motifs suspects.</p></div></div>
+        <div class="welcome-line"><div><h2>Alertes sécurité</h2><p class="muted">Requêtes correspondant à des scans ou motifs suspects.</p></div><button id="mark-security-read" class="btn btn--outline" type="button">Tout marquer comme lu</button></div>
         <div id="security-country-cards" class="security-country-cards"></div>
         <div class="security-columns">
-          <div class="card"><div class="card-header"><div><h2>Classement des IP</h2><p class="muted">Les adresses les plus détectées</p></div></div><div class="table-wrap"><table id="security-ip-table" class="table"></table></div></div>
+          <div class="card"><div class="card-header"><div><h2>Robots identifiés</h2><p class="muted">Moteurs et crawlers connus</p></div></div><div class="table-wrap"><table id="security-bots-table" class="table"></table></div></div>
+          <div class="card"><div class="card-header"><div><h2>Classement des IP</h2<p class="muted">Les adresses les plus détectées</p></div></div><div class="table-wrap"><table id="security-ip-table" class="table"></table></div></div>
           <div class="card"><div class="card-header"><div><h2>IPs bannies</h2><p class="muted">Blocage automatique après 10 alertes</p></div></div><div class="table-wrap"><table id="security-bans-table" class="table"></table></div></div>
         </div>
         <div class="card"><div id="security-events-full" class="security-events">Aucune alerte</div></div>

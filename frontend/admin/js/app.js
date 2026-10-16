@@ -4,7 +4,7 @@ const state = {
   sessions: [],
   wordStats: [],
   summary: null,
-  players: [], activity: [], securityEvents: [], securityBans: [], reports: [],
+  players: [], activity: [], securityEvents: [], securityBans: [], securityBots: [], securityUnread: 0, reports: [],
   activeTab: 'stats',
   sorts: {
     sessions: { key: 'played_at', dir: 'desc' },
@@ -32,6 +32,8 @@ const els = {
   securityCountryCards: document.getElementById('security-country-cards'),
   securityIpTable: document.getElementById('security-ip-table'),
   securityBansTable: document.getElementById('security-bans-table'),
+  securityBotsTable: document.getElementById('security-bots-table'),
+  markSecurityRead: document.getElementById('mark-security-read'),
   sessionsTable: document.getElementById('sessions-table'),
   wordStatsTable: document.getElementById('word-stats-table'),
   wordsTable: document.getElementById('words-table'),
@@ -184,6 +186,7 @@ function renderSecurityStats() {
   els.securityCountryCards.innerHTML = [...countries.entries()].sort((a,b) => b[1]-a[1]).map(([country,count]) => `<div class="security-country-card"><div class="security-country-code">${esc(country)}</div><strong>${count}</strong><small>requête${count > 1 ? 's' : ''}</small></div>`).join('') || '<span class="muted">Aucune donnée</span>';
   const ranked = [...ips.values()].sort((a,b) => b.count-a.count);
   els.securityIpTable.innerHTML = `<thead><tr><th>IP</th><th>Pays</th><th>Requêtes</th></tr></thead><tbody>${ranked.map((x) => `<tr><td>${esc(x.ip)}</td><td>${esc(x.country)}</td><td><strong>${x.count}</strong></td></tr>`).join('')}</tbody>`;
+  els.securityBotsTable.innerHTML = `<thead><tr><th>Bot</th><th>Requêtes</th><th>IPs</th><th>Dernière activité</th></tr></thead><tbody>${state.securityBots.map((x) => `<tr><td>${esc(x.bot_name)}</td><td>${x.requests}</td><td>${x.ips}</td><td>${formatDateTime(x.last_seen)}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">Aucun robot identifié</td></tr>'}</tbody>`;
   els.securityBansTable.innerHTML = `<thead><tr><th>IP</th><th>Requêtes</th><th>Date</th><th></th></tr></thead><tbody>${state.securityBans.map((x) => `<tr><td>${esc(x.ip)}</td><td>${x.request_count}</td><td>${formatDateTime(x.created_at)}</td><td><button class="btn btn--outline" data-unban="${esc(x.ip)}" type="button">DéBAN</button></td></tr>`).join('') || '<tr><td colspan="4" class="muted">Aucune IP bannie</td></tr>'}</tbody>`;
   els.securityBansTable.querySelectorAll('[data-unban]').forEach((button) => button.addEventListener('click', () => unbanIp(button.dataset.unban)));
 }
@@ -194,8 +197,8 @@ function renderActivity() {
   const securityText = state.securityEvents.length ? state.securityEvents.map((x) => `${formatDateTime(x.created_at)} — ${x.severity} — ${x.event_type} — ${x.ip || 'inconnu'} — ${x.url || ''}`).join('\n') : 'Aucune alerte détectée';
   els.securityEvents.textContent = securityText;
   els.securityEventsFull.textContent = securityText;
-  els.securityBadge.textContent = state.securityEvents.length;
-  els.securityBadge.classList.toggle('hidden', state.securityEvents.length === 0);
+  els.securityBadge.textContent = state.securityUnread;
+  els.securityBadge.classList.toggle('hidden', state.securityUnread === 0);
   renderSecurityStats();
 }
 
@@ -320,11 +323,13 @@ function fillWordForm(word = null) {
 }
 
 async function loadData() {
-  const [summary, sessions, players, activity, securityEvents, securityBans, reports, wordStats, words] = await Promise.all([
-    api('/api/stats/summary'), api('/api/stats/sessions?limit=100'), api('/api/stats/players'),
+  const [summary, securitySummary, securityBots, sessions, players, activity, securityEvents, securityBans, reports, wordStats, words] = await Promise.all([
+    api('/api/stats/summary'), api('/api/security/summary'), api('/api/security/bots'), api('/api/stats/sessions?limit=100'), api('/api/stats/players'),
     api('/api/stats/activity'), api('/api/security/events'), api('/api/security/bans'), api('/api/reports'), api('/api/stats/word-stats'), api('/api/words')
   ]);
   state.summary = summary;
+  state.securityUnread = securitySummary.unread || 0;
+  state.securityBots = securityBots;
   state.sessions = sessions;
   state.players = players;
   state.activity = activity;
@@ -466,6 +471,7 @@ async function handleExport() {
 async function boot() {
   els.loginForm.addEventListener('submit', handleLogin);
   els.logoutBtn.addEventListener('click', handleLogout);
+  els.markSecurityRead.addEventListener('click', async () => { await api('/api/security/read', { method: 'POST', body: '{}' }); await loadData(); });
   els.wordForm.addEventListener('submit', handleWordSubmit);
   els.wordReset.addEventListener('click', () => fillWordForm());
   els.exportBtn.addEventListener('click', () => {

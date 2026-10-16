@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const { initDatabase, getStatsSummary, listSessions, listWordStats, listWords, upsertWord, deleteWord, getWordById, setAllWordsEnabled, importWords, listWordReports, resolveWordReport, recordSecurityEvent, listSecurityEvents, countOpenSecurityEvents, isSecurityBanned, listSecurityBans, unbanSecurityIp } = require('./db/database');
+const { initDatabase, getStatsSummary, listSessions, listWordStats, listWords, upsertWord, deleteWord, getWordById, setAllWordsEnabled, importWords, listWordReports, resolveWordReport, recordSecurityEvent, listSecurityEvents, countOpenSecurityEvents, isSecurityBanned, listSecurityBans, unbanSecurityIp, listSecurityBots, markSecurityEventsRead } = require('./db/database');
 const { authCookie, createSessionToken, validatePassword, verifySessionToken, readSessionToken, requireAdmin } = require('./admin-auth');
 const { getClientIp, getClientCountry } = require('./client-ip');
 
@@ -14,7 +14,7 @@ function classifySuspiciousRequest(url) {
 }
 function auditRequests(req, _res, next) {
   const classification = classifySuspiciousRequest(req.originalUrl);
-  if (classification) recordSecurityEvent({ event_type: classification[0], severity: classification[1], ip: getClientIp(req), country: getClientCountry(req), method: req.method, url: req.originalUrl });
+  if (classification) recordSecurityEvent({ event_type: classification[0], severity: classification[1], ip: getClientIp(req), country: getClientCountry(req), user_agent: req.headers['user-agent'], method: req.method, url: req.originalUrl });
   next();
 }
 function loginRateLimit(req, res, next) {
@@ -99,7 +99,9 @@ app.get('/api/stats/activity', requireAdmin, (_req, res) => {
 });
 
 app.get('/api/security/events', requireAdmin, (_req, res) => res.json(listSecurityEvents()));
-app.get('/api/security/summary', requireAdmin, (_req, res) => res.json({ last24h: countOpenSecurityEvents() }));
+app.get('/api/security/summary', requireAdmin, (_req, res) => res.json({ unread: countOpenSecurityEvents() }));
+app.get('/api/security/bots', requireAdmin, (_req, res) => res.json(listSecurityBots()));
+app.post('/api/security/read', requireAdmin, (_req, res) => res.json({ ok: true, marked: markSecurityEventsRead() }));
 app.get('/api/security/bans', requireAdmin, (_req, res) => res.json(listSecurityBans()));
 app.delete('/api/security/bans/:ip', requireAdmin, (req, res) => res.json({ ok: unbanSecurityIp(req.params.ip) }));
 

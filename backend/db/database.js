@@ -78,6 +78,9 @@ function initDatabase() {
       url TEXT,
       details TEXT,
       country TEXT DEFAULT 'XX',
+      bot_name TEXT,
+      is_bot INTEGER NOT NULL DEFAULT 0,
+      read_at DATETIME,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
     CREATE INDEX IF NOT EXISTS idx_security_events_created_at ON security_events(created_at);
@@ -90,7 +93,9 @@ function initDatabase() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
-  try { db.exec("ALTER TABLE security_events ADD COLUMN country TEXT DEFAULT 'XX'"); } catch (_error) { /* already migrated */ }
+  for (const column of [
+    "country TEXT DEFAULT 'XX'", "bot_name TEXT", "is_bot INTEGER NOT NULL DEFAULT 0", "read_at DATETIME"
+  ]) { try { db.exec(`ALTER TABLE security_events ADD COLUMN ${column}`); } catch (_error) { /* already migrated */ } }
 
   return db;
 }
@@ -384,14 +389,27 @@ function recordGameSession(session) {
   return insertTransaction(session);
 }
 
+function detectBot(userAgent = '') {
+  const ua = String(userAgent).toLowerCase();
+  const bots = [
+    ['Googlebot', /googlebot|adsbot-google/], ['Bingbot', /bingbot|adidxbot/], ['YandexBot', /yandexbot/],
+    ['Baiduspider', /baiduspider/], ['DuckDuckBot', /duckduckbot/], ['Applebot', /applebot/],
+    ['AhrefsBot', /ahrefsbot/], ['SemrushBot', /semrushbot/], ['MJ12bot', /mj12bot/],
+    ['DotBot', /dotbot/], ['GPTBot', /gptbot/], ['ClaudeBot', /claudebot/], ['FacebookBot', /facebookexternalhit|facebookbot/]
+  ];
+  const found = bots.find(([, pattern]) => pattern.test(ua));
+  return found ? found[0] : null;
+}
+
 function recordSecurityEvent(event) {
   const database = getDb();
   const id = `security_${crypto.randomUUID()}`;
   const ip = String(event.ip || 'unknown').slice(0, 100);
-  database.prepare(`INSERT INTO security_events (id, event_type, severity, ip, method, url, details, country) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(
+  const botName = detectBot(event.user_agent);
+  database.prepare(`INSERT INTO security_events (id, event_type, severity, ip, method, url, details, country, bot_name, is_bot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
     id, event.event_type || 'suspicious_request', event.severity || 'warning', ip,
     String(event.method || '').slice(0, 16), String(event.url || '').slice(0, 2048),
-    String(event.details || '').slice(0, 500), String(event.country || 'XX').slice(0, 8)
+    String(event.details || '').slice(0, 500), String(event.country || 'XX').slice(0, 8), botName, botName ? 1 : 0
   );
   const count = database.prepare(`SELECT COUNT(*) AS count FROM security_events WHERE ip = ? AND created_at >= datetime('now', '-24 hours')`).get(ip).count;
   if (count >= 10) database.prepare(`INSERT INTO security_bans (ip, request_count) VALUES (?, ?) ON CONFLICT(ip) DO UPDATE SET request_count = excluded.request_count`).run(ip, count);
@@ -415,7 +433,16 @@ function listSecurityEvents(limit = 500) {
 }
 
 function countOpenSecurityEvents() {
-  return getDb().prepare(`SELECT COUNT(*) AS count FROM security_events WHERE created_at >= datetime('now', '-24 hours')`).get().count;
+  return getDb().prepare('SELECT COUNT(*) AS count FROM security_events WHERE read_at IS NULL').get().count;
+}
+
+function markSecurityEventsRead() {
+  return getDb().prepare('UPDATE security_events SET read_at = CURRENT_TIMESTAMP WHERE read_at IS NULL').run().changes;
+}
+
+function listSecurityBots() {
+  return getDb().prepare(`SELECT bot_name, COUNT(*) AS requests, COUNT(DISTINCT ip) AS ips, MAX(created_at) AS last_seen
+    FROM security_events WHERE is_bot = 1 GROUP BY bot_name ORDER BY requests DESC`).all();
 }
 
 function createWordReport(report) {
@@ -561,6 +588,8 @@ module.exports = {
   recordSecurityEvent,
   listSecurityEvents,
   countOpenSecurityEvents,
+  markSecurityEventsRead,
+  listSecurityBots,
   isSecurityBanned,
   listSecurityBans,
   unbanSecurityIp,

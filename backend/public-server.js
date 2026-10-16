@@ -27,7 +27,7 @@ app.use((req, res, next) => {
   else if (/<script|javascript:|onerror\s*=/i.test(url)) { eventType = 'xss_probe'; severity = 'high'; }
   else if (/union\s+(all\s+)?select|sleep\s*\(|benchmark\s*\(/i.test(url)) { eventType = 'sql_injection_probe'; severity = 'high'; }
   else if (/\.\.(\/|%2f|%5c)/i.test(url)) { eventType = 'path_traversal_probe'; severity = 'high'; }
-  if (eventType) recordSecurityEvent({ event_type: eventType, severity, ip: clientIp, country: getClientCountry(req), method: req.method, url });
+  if (eventType) recordSecurityEvent({ event_type: eventType, severity, ip: clientIp, country: getClientCountry(req), user_agent: req.headers['user-agent'], method: req.method, url });
   next();
 });
 const port = process.env.PORT || 4173;
