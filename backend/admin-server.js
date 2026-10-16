@@ -1,8 +1,8 @@
 const express = require('express');
 const path = require('path');
-const { initDatabase, getStatsSummary, listSessions, listWordStats, listWords, upsertWord, deleteWord, getWordById, setAllWordsEnabled, importWords, listWordReports, resolveWordReport, recordSecurityEvent, listSecurityEvents, countOpenSecurityEvents } = require('./db/database');
+const { initDatabase, getStatsSummary, listSessions, listWordStats, listWords, upsertWord, deleteWord, getWordById, setAllWordsEnabled, importWords, listWordReports, resolveWordReport, recordSecurityEvent, listSecurityEvents, countOpenSecurityEvents, isSecurityBanned, listSecurityBans, unbanSecurityIp } = require('./db/database');
 const { authCookie, createSessionToken, validatePassword, verifySessionToken, readSessionToken, requireAdmin } = require('./admin-auth');
-const { getClientIp } = require('./client-ip');
+const { getClientIp, getClientCountry } = require('./client-ip');
 
 const loginAttempts = new Map();
 function classifySuspiciousRequest(url) {
@@ -14,7 +14,7 @@ function classifySuspiciousRequest(url) {
 }
 function auditRequests(req, _res, next) {
   const classification = classifySuspiciousRequest(req.originalUrl);
-  if (classification) recordSecurityEvent({ event_type: classification[0], severity: classification[1], ip: getClientIp(req), method: req.method, url: req.originalUrl });
+  if (classification) recordSecurityEvent({ event_type: classification[0], severity: classification[1], ip: getClientIp(req), country: getClientCountry(req), method: req.method, url: req.originalUrl });
   next();
 }
 function loginRateLimit(req, res, next) {
@@ -45,6 +45,10 @@ const adminDir = path.join(__dirname, '..', 'frontend', 'admin');
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: false }));
+app.use((req, res, next) => {
+  if (isSecurityBanned(getClientIp(req))) return res.status(403).json({ error: 'blocked' });
+  next();
+});
 app.use(auditRequests);
 app.use(express.static(adminDir, { maxAge: '0' }));
 
@@ -61,7 +65,7 @@ app.post('/api/auth/login', loginRateLimit, (req, res) => {
   if (!validatePassword(password)) {
     const key = getClientIp(req);
     loginAttempts.set(key, [...(req.loginAttempts || []), Date.now()]);
-    recordSecurityEvent({ event_type: 'failed_admin_login', severity: 'warning', ip: key, method: req.method, url: req.originalUrl });
+    recordSecurityEvent({ event_type: 'failed_admin_login', severity: 'warning', ip: key, country: getClientCountry(req), method: req.method, url: req.originalUrl });
     return res.status(401).json({ error: 'invalid_password' });
   }
 
@@ -96,6 +100,8 @@ app.get('/api/stats/activity', requireAdmin, (_req, res) => {
 
 app.get('/api/security/events', requireAdmin, (_req, res) => res.json(listSecurityEvents()));
 app.get('/api/security/summary', requireAdmin, (_req, res) => res.json({ last24h: countOpenSecurityEvents() }));
+app.get('/api/security/bans', requireAdmin, (_req, res) => res.json(listSecurityBans()));
+app.delete('/api/security/bans/:ip', requireAdmin, (req, res) => res.json({ ok: unbanSecurityIp(req.params.ip) }));
 
 app.get('/api/reports', requireAdmin, (_req, res) => res.json(listWordReports()));
 app.put('/api/reports/:id', requireAdmin, (req, res) => {

@@ -4,8 +4,8 @@ const packageJson = require('../package.json');
 const { initDatabase } = require('./db/database');
 const wordsRouter = require('./routes/words');
 const statsRouter = require('./routes/stats');
-const { createWordReport, recordSecurityEvent } = require('./db/database');
-const { getClientIp } = require('./client-ip');
+const { createWordReport, recordSecurityEvent, isSecurityBanned } = require('./db/database');
+const { getClientIp, getClientCountry } = require('./client-ip');
 
 initDatabase();
 
@@ -17,7 +17,9 @@ app.use((_req, res, next) => {
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   next();
 });
-app.use((req, _res, next) => {
+app.use((req, res, next) => {
+  const clientIp = getClientIp(req);
+  if (isSecurityBanned(clientIp)) return res.status(403).json({ error: 'blocked' });
   const url = req.originalUrl;
   let eventType = null;
   let severity = 'warning';
@@ -25,7 +27,7 @@ app.use((req, _res, next) => {
   else if (/<script|javascript:|onerror\s*=/i.test(url)) { eventType = 'xss_probe'; severity = 'high'; }
   else if (/union\s+(all\s+)?select|sleep\s*\(|benchmark\s*\(/i.test(url)) { eventType = 'sql_injection_probe'; severity = 'high'; }
   else if (/\.\.(\/|%2f|%5c)/i.test(url)) { eventType = 'path_traversal_probe'; severity = 'high'; }
-  if (eventType) recordSecurityEvent({ event_type: eventType, severity, ip: getClientIp(req), method: req.method, url });
+  if (eventType) recordSecurityEvent({ event_type: eventType, severity, ip: clientIp, country: getClientCountry(req), method: req.method, url });
   next();
 });
 const port = process.env.PORT || 4173;

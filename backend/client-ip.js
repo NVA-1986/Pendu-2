@@ -21,4 +21,9 @@ function getClientIp(req) {
   return String(socketIp).replace(/^::ffff:/, '') || 'unknown';
 }
 
-module.exports = { getClientIp };
+function getClientCountry(req) {
+  const country = String(req.headers['cf-ipcountry'] || '').toUpperCase();
+  return /^[A-Z]{2}$/.test(country) ? country : 'XX';
+}
+
+module.exports = { getClientIp, getClientCountry };

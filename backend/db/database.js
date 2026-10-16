@@ -77,11 +77,20 @@ function initDatabase() {
       method TEXT,
       url TEXT,
       details TEXT,
+      country TEXT DEFAULT 'XX',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
     CREATE INDEX IF NOT EXISTS idx_security_events_created_at ON security_events(created_at);
     CREATE INDEX IF NOT EXISTS idx_security_events_type ON security_events(event_type);
+
+    CREATE TABLE IF NOT EXISTS security_bans (
+      ip TEXT PRIMARY KEY,
+      reason TEXT NOT NULL DEFAULT '10 suspicious requests',
+      request_count INTEGER NOT NULL DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
+  try { db.exec("ALTER TABLE security_events ADD COLUMN country TEXT DEFAULT 'XX'"); } catch (_error) { /* already migrated */ }
 
   return db;
 }
@@ -378,12 +387,27 @@ function recordGameSession(session) {
 function recordSecurityEvent(event) {
   const database = getDb();
   const id = `security_${crypto.randomUUID()}`;
-  database.prepare(`INSERT INTO security_events (id, event_type, severity, ip, method, url, details) VALUES (?, ?, ?, ?, ?, ?, ?)`).run(
-    id, event.event_type || 'suspicious_request', event.severity || 'warning',
-    String(event.ip || '').slice(0, 100), String(event.method || '').slice(0, 16),
-    String(event.url || '').slice(0, 2048), String(event.details || '').slice(0, 500)
+  const ip = String(event.ip || 'unknown').slice(0, 100);
+  database.prepare(`INSERT INTO security_events (id, event_type, severity, ip, method, url, details, country) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(
+    id, event.event_type || 'suspicious_request', event.severity || 'warning', ip,
+    String(event.method || '').slice(0, 16), String(event.url || '').slice(0, 2048),
+    String(event.details || '').slice(0, 500), String(event.country || 'XX').slice(0, 8)
   );
-  return id;
+  const count = database.prepare(`SELECT COUNT(*) AS count FROM security_events WHERE ip = ? AND created_at >= datetime('now', '-24 hours')`).get(ip).count;
+  if (count >= 10) database.prepare(`INSERT INTO security_bans (ip, request_count) VALUES (?, ?) ON CONFLICT(ip) DO UPDATE SET request_count = excluded.request_count`).run(ip, count);
+  return { id, count, banned: count >= 10 };
+}
+
+function isSecurityBanned(ip) {
+  return Boolean(getDb().prepare('SELECT ip FROM security_bans WHERE ip = ?').get(ip));
+}
+
+function listSecurityBans() {
+  return getDb().prepare('SELECT * FROM security_bans ORDER BY created_at DESC').all();
+}
+
+function unbanSecurityIp(ip) {
+  return getDb().prepare('DELETE FROM security_bans WHERE ip = ?').run(ip).changes > 0;
 }
 
 function listSecurityEvents(limit = 500) {

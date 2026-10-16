@@ -4,7 +4,7 @@ const state = {
   sessions: [],
   wordStats: [],
   summary: null,
-  players: [], activity: [], securityEvents: [], reports: [],
+  players: [], activity: [], securityEvents: [], securityBans: [], reports: [],
   activeTab: 'stats',
   sorts: {
     sessions: { key: 'played_at', dir: 'desc' },
@@ -29,6 +29,9 @@ const els = {
   reportsTable: document.getElementById('reports-table'),
   reportsBadge: document.getElementById('reports-badge'),
   securityBadge: document.getElementById('security-badge'),
+  securityCountryCards: document.getElementById('security-country-cards'),
+  securityIpTable: document.getElementById('security-ip-table'),
+  securityBansTable: document.getElementById('security-bans-table'),
   sessionsTable: document.getElementById('sessions-table'),
   wordStatsTable: document.getElementById('word-stats-table'),
   wordsTable: document.getElementById('words-table'),
@@ -168,6 +171,23 @@ function renderReports() {
   els.reportsTable.innerHTML = `<thead><tr><th>Date</th><th>Mot</th><th>Joueur</th><th>Message</th><th>Statut</th><th>Action</th></tr></thead><tbody>${state.reports.map((r) => `<tr><td>${formatDateTime(r.created_at)}</td><td>${esc(r.word)}</td><td>${esc(r.player_id)}</td><td>${esc(r.message)}</td><td>${r.status === 'open' ? '<span class="report-open">À traiter</span>' : '<span class="report-done">Traité</span>'}</td><td>${r.status === 'open' ? `<button class="btn btn--outline" data-resolve-report="${esc(r.id)}" type="button">Marquer traité</button>` : '—'}</td></tr>`).join('')}</tbody>`;
   els.reportsTable.querySelectorAll('[data-resolve-report]').forEach((button) => button.addEventListener('click', () => resolveReport(button.dataset.resolveReport)));
 }
+function renderSecurityStats() {
+  const countries = new Map();
+  const ips = new Map();
+  state.securityEvents.forEach((event) => {
+    const country = event.country && event.country !== 'XX' ? event.country : 'Inconnu';
+    countries.set(country, (countries.get(country) || 0) + 1);
+    const ip = event.ip || 'inconnu';
+    const current = ips.get(ip) || { ip, count: 0, country };
+    current.count += 1; current.country = country; ips.set(ip, current);
+  });
+  els.securityCountryCards.innerHTML = [...countries.entries()].sort((a,b) => b[1]-a[1]).map(([country,count]) => `<div class="security-country-card"><div class="security-country-code">${esc(country)}</div><strong>${count}</strong><small>requête${count > 1 ? 's' : ''}</small></div>`).join('') || '<span class="muted">Aucune donnée</span>';
+  const ranked = [...ips.values()].sort((a,b) => b.count-a.count);
+  els.securityIpTable.innerHTML = `<thead><tr><th>IP</th><th>Pays</th><th>Requêtes</th></tr></thead><tbody>${ranked.map((x) => `<tr><td>${esc(x.ip)}</td><td>${esc(x.country)}</td><td><strong>${x.count}</strong></td></tr>`).join('')}</tbody>`;
+  els.securityBansTable.innerHTML = `<thead><tr><th>IP</th><th>Requêtes</th><th>Date</th><th></th></tr></thead><tbody>${state.securityBans.map((x) => `<tr><td>${esc(x.ip)}</td><td>${x.request_count}</td><td>${formatDateTime(x.created_at)}</td><td><button class="btn btn--outline" data-unban="${esc(x.ip)}" type="button">DéBAN</button></td></tr>`).join('') || '<tr><td colspan="4" class="muted">Aucune IP bannie</td></tr>'}</tbody>`;
+  els.securityBansTable.querySelectorAll('[data-unban]').forEach((button) => button.addEventListener('click', () => unbanIp(button.dataset.unban)));
+}
+
 function renderActivity() {
   const max = Math.max(1, ...state.activity.map((x) => Number(x.sessions)));
   els.activityChart.innerHTML = state.activity.slice().reverse().map((x) => `<div class="activity-bar" title="${esc(x.day)} : ${x.sessions} parties"><span style="height:${Math.max(4, x.sessions / max * 100)}%"></span><small>${esc(x.day?.slice(5))}</small></div>`).join('') || '<span class="muted">Pas encore de données</span>';
@@ -176,6 +196,7 @@ function renderActivity() {
   els.securityEventsFull.textContent = securityText;
   els.securityBadge.textContent = state.securityEvents.length;
   els.securityBadge.classList.toggle('hidden', state.securityEvents.length === 0);
+  renderSecurityStats();
 }
 
 function renderSessions() {
@@ -299,20 +320,27 @@ function fillWordForm(word = null) {
 }
 
 async function loadData() {
-  const [summary, sessions, players, activity, securityEvents, reports, wordStats, words] = await Promise.all([
+  const [summary, sessions, players, activity, securityEvents, securityBans, reports, wordStats, words] = await Promise.all([
     api('/api/stats/summary'), api('/api/stats/sessions?limit=100'), api('/api/stats/players'),
-    api('/api/stats/activity'), api('/api/security/events'), api('/api/reports'), api('/api/stats/word-stats'), api('/api/words')
+    api('/api/stats/activity'), api('/api/security/events'), api('/api/security/bans'), api('/api/reports'), api('/api/stats/word-stats'), api('/api/words')
   ]);
   state.summary = summary;
   state.sessions = sessions;
   state.players = players;
   state.activity = activity;
   state.securityEvents = securityEvents;
+  state.securityBans = securityBans;
   state.reports = reports;
   state.wordStats = wordStats;
   state.words = words;
   renderKpis();
   renderAllTables();
+}
+
+async function unbanIp(ip) {
+  if (!confirm(`Débannir ${ip} ?`)) return;
+  await api(`/api/security/bans/${encodeURIComponent(ip)}`, { method: 'DELETE' });
+  await loadData();
 }
 
 async function resolveReport(id) {
