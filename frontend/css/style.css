@@ -408,6 +408,9 @@ body.theme-dark #hangman-svg * {
   white-space: nowrap;
 }
 
+.footer-player, .footer-meta { display: flex; align-items: center; gap: 12px; }
+.footer-player .player-id { min-width: 170px; }
+.footer-player .action-btn { min-height: 38px; padding: 0 12px; }
 .app-credit {
   text-align: right;
   margin-left: auto;
@@ -435,9 +438,10 @@ body.theme-dark #hangman-svg * {
 .activity-bar small { font-size: 10px; color: var(--muted); }
 .security-events { white-space: pre-wrap; max-height: 180px; overflow: auto; font: 12px monospace; color: var(--danger); }
 @media (max-width: 520px) {
-  .controls {
-    grid-template-columns: 1fr;
-  }
+  .controls { grid-template-columns: 1fr; }
+  .app-footer { align-items: stretch; flex-direction: column; white-space: normal; }
+  .footer-player, .footer-meta { justify-content: space-between; }
+  .footer-meta { font-size: .82rem; }
 }
 
 @media (min-width: 700px) {

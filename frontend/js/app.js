@@ -174,8 +174,10 @@ function cleanBracketText(value) {
 
 function renderHint() {
   const prompt = cleanBracketText(getPromptHint() || '—');
-  const hint = state.currentWord?.secondary_hint ? cleanBracketText(state.currentWord.secondary_hint).toUpperCase() : '';
-  els.hintText.textContent = hint ? `${hint} - ${prompt}` : prompt;
+  const hint = state.currentWord?.secondary_hint ? cleanBracketText(state.currentWord.secondary_hint) : '';
+  const dialect = cleanBracketText(state.currentWord?.dialect || '');
+  const dialectPrefix = dialect ? `(${dialect}) - ` : '';
+  els.hintText.textContent = hint ? `${dialectPrefix}${hint} - ${prompt}` : `${dialectPrefix}${prompt}`;
 
   const germanWord = String(state.currentWord?.german_translation || state.currentWord?.deutch || '').trim();
   if (germanWord) {
@@ -433,7 +435,7 @@ async function init() {
   renderKeyboard(els.keyboard, handleGuess);
   renderDirectionLabel();
   applyTheme(state.theme);
-  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '1.1.9'}`;
+  els.appVersion.textContent = `v${window.APP_CONFIG?.version || '2.0.1'}`;
   registerPhysicalKeyboard();
   registerBeforeUnload();
   registerPwa();
