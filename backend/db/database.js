@@ -561,6 +561,9 @@ module.exports = {
   recordSecurityEvent,
   listSecurityEvents,
   countOpenSecurityEvents,
+  isSecurityBanned,
+  listSecurityBans,
+  unbanSecurityIp,
   listWordStats,
   normalizeWordRecord,
   generateWordId
