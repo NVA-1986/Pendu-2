@@ -87,6 +87,10 @@ function formatDateTime(value) {
   const date = new Date(`${raw.replace(' ', 'T')}Z`);
   return Number.isNaN(date.getTime()) ? raw : date.toLocaleString('fr-CH', { dateStyle: 'short', timeStyle: 'medium' });
 }
+function formatCountry(code) {
+  if (!code || code === 'XX' || code === 'Inconnu') return 'Inconnu';
+  try { return new Intl.DisplayNames(['fr-CH'], { type: 'region' }).of(code) || code; } catch (_error) { return code; }
+}
 function esc(value) {
   return String(formatValue(value)).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
@@ -178,7 +182,7 @@ function renderSecurityStats() {
   const countries = new Map();
   const ips = new Map();
   state.securityEvents.forEach((event) => {
-    const country = event.country && event.country !== 'XX' ? event.country : 'Inconnu';
+    const country = formatCountry(event.country);
     countries.set(country, (countries.get(country) || 0) + 1);
     const ip = event.ip || 'inconnu';
     const current = ips.get(ip) || { ip, count: 0, country };
