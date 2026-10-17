@@ -70,7 +70,7 @@ app.post('/api/auth/login', loginRateLimit, (req, res) => {
   }
 
   const token = createSessionToken();
-  res.setHeader('Set-Cookie', authCookie({ value: token, secure: process.env.COOKIE_SECURE === 'true' || process.env.NODE_ENV === 'production' }));
+  res.setHeader('Set-Cookie', authCookie({ value: token, secure: process.env.COOKIE_SECURE === 'true' || (process.env.NODE_ENV === 'production' && process.env.COOKIE_SECURE !== 'false') }));
   return res.json({ ok: true });
 });
 
